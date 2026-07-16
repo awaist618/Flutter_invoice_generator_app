@@ -243,7 +243,7 @@ class _InvoicesListScreenState extends State<InvoicesListScreen> {
                       crossAxisAlignment: CrossAxisAlignment.end,
                       children: [
                         Text(
-                          r'$' + NumberFormat("#,##0", "en_US").format(inv.total),
+                          Provider.of<SettingsProvider>(context, listen: false).currencySymbol + NumberFormat("#,##0", "en_US").format(inv.total),
                           style: const TextStyle(
                             fontWeight: FontWeight.bold,
                             fontSize: 18,

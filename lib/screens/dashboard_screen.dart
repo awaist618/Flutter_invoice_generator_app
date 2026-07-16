@@ -1,9 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../services/invoice_provider.dart';
+import '../services/settings_provider.dart';
 import '../models/invoice_model.dart';
 import 'invoices_list_screen.dart';
 import 'create_invoice_screen.dart';
+import 'settings_screen.dart';
 
 class DashboardScreen extends StatefulWidget {
   const DashboardScreen({super.key});
@@ -18,6 +20,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
   @override
   Widget build(BuildContext context) {
     final provider = Provider.of<InvoiceProvider>(context);
+    final settings = Provider.of<SettingsProvider>(context);
 
     return Scaffold(
       backgroundColor: const Color(0xFFF3F2FF),
@@ -71,9 +74,9 @@ class _DashboardScreenState extends State<DashboardScreen> {
                         fontFamily: 'Serif',
                       ),
                     ),
-                    const Text(
-                      'Acme Studio',
-                      style: TextStyle(
+                    Text(
+                      settings.companyName,
+                      style: const TextStyle(
                         fontSize: 32,
                         fontWeight: FontWeight.bold,
                         color: Color(0xFF2A2859),
@@ -98,7 +101,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
                         ),
                         _buildSummaryCard(
                           'Total revenue',
-                          r'$' + provider.totalRevenue.toStringAsFixed(0),
+                          settings.currencySymbol + provider.totalRevenue.toStringAsFixed(0),
                           const Color(0xFFE25E31),
                         ),
                         _buildSummaryCard(
@@ -230,6 +233,15 @@ class _DashboardScreenState extends State<DashboardScreen> {
           );
           return;
         }
+        if (index == 3) {
+          Navigator.push(
+            context,
+            MaterialPageRoute(
+              builder: (context) => const SettingsScreen(),
+            ),
+          );
+          return;
+        }
         setState(() {
           _selectedIndex = index;
         });
@@ -350,7 +362,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
             crossAxisAlignment: CrossAxisAlignment.end,
             children: [
               Text(
-                r'$' + inv.total.toStringAsFixed(0),
+                Provider.of<SettingsProvider>(context, listen: false).currencySymbol + inv.total.toStringAsFixed(0),
                 style: const TextStyle(
                   fontWeight: FontWeight.bold,
                   fontSize: 18,

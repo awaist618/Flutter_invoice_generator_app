@@ -3,6 +3,8 @@ import 'package:provider/provider.dart';
 import 'package:intl/intl.dart';
 import '../models/invoice_model.dart';
 import '../services/invoice_provider.dart';
+import '../services/settings_provider.dart';
+import '../services/notification_service.dart';
 
 class CreateInvoiceScreen extends StatefulWidget {
   const CreateInvoiceScreen({super.key});
@@ -19,15 +21,16 @@ class _CreateInvoiceScreenState extends State<CreateInvoiceScreen> {
   DateTime _invoiceDate = DateTime.now();
   DateTime _dueDate = DateTime.now().add(const Duration(days: 14));
   final List<InvoiceItem> _items = [];
-  final double _taxRate = 8.0;
   String _generatedInvoiceNo = '';
 
   @override
   void initState() {
     super.initState();
     WidgetsBinding.instance.addPostFrameCallback((_) {
+      final settings = Provider.of<SettingsProvider>(context, listen: false);
       setState(() {
-        _generatedInvoiceNo = Provider.of<InvoiceProvider>(context, listen: false).nextInvoiceNumber;
+        _generatedInvoiceNo = settings.invoicePrefix + 
+            (100 + Provider.of<InvoiceProvider>(context, listen: false).invoices.length + 1).toString();
       });
     });
   }
@@ -125,12 +128,16 @@ class _CreateInvoiceScreenState extends State<CreateInvoiceScreen> {
     );
   }
 
-  double get _subtotal => _items.fold(0, (sum, item) => sum + item.total);
-  double get _taxAmount => _subtotal * (_taxRate / 100);
-  double get _total => _subtotal + _taxAmount;
+  double _calculateSubtotal() => _items.fold(0, (sum, item) => sum + item.total);
+  double _calculateTax(double rate) => _calculateSubtotal() * (rate / 100);
+  double _calculateTotal(double rate) => _calculateSubtotal() + _calculateTax(rate);
 
   @override
   Widget build(BuildContext context) {
+    final settings = Provider.of<SettingsProvider>(context);
+    final subtotal = _calculateSubtotal();
+    final taxAmount = _calculateTax(settings.defaultTaxRate);
+    final total = _calculateTotal(settings.defaultTaxRate);
     return Scaffold(
       backgroundColor: const Color(0xFFF3F2FF),
       body: Stack(
@@ -256,9 +263,9 @@ class _CreateInvoiceScreenState extends State<CreateInvoiceScreen> {
                       ),
                       child: Column(
                         children: [
-                          _buildSummaryRow('Subtotal', r'$' + _subtotal.toStringAsFixed(2)),
+                          _buildSummaryRow('Subtotal', settings.currencySymbol + subtotal.toStringAsFixed(2)),
                           const SizedBox(height: 10),
-                          _buildSummaryRow('Tax (8%)', r'$' + _taxAmount.toStringAsFixed(2)),
+                          _buildSummaryRow('Tax (${settings.defaultTaxRate.toStringAsFixed(0)}%)', settings.currencySymbol + taxAmount.toStringAsFixed(2)),
                           const SizedBox(height: 20),
                           const Divider(color: Colors.white24),
                           const SizedBox(height: 20),
@@ -270,7 +277,7 @@ class _CreateInvoiceScreenState extends State<CreateInvoiceScreen> {
                                 style: TextStyle(color: Colors.white, fontSize: 22, fontWeight: FontWeight.bold),
                               ),
                               Text(
-                                r'$' + _total.toStringAsFixed(2),
+                                settings.currencySymbol + total.toStringAsFixed(2),
                                 style: const TextStyle(color: Colors.white, fontSize: 22, fontWeight: FontWeight.bold),
                               ),
                             ],
@@ -295,8 +302,17 @@ class _CreateInvoiceScreenState extends State<CreateInvoiceScreen> {
                               date: _invoiceDate,
                               dueDate: _dueDate,
                               items: List.from(_items),
+                              taxRate: settings.defaultTaxRate,
                             );
                             Provider.of<InvoiceProvider>(context, listen: false).addInvoice(newInvoice);
+                            
+                            // Schedule notification
+                            NotificationService().scheduleDueDateNotification(
+                              newInvoice.hashCode, 
+                              newInvoice.invoiceNumber, 
+                              newInvoice.dueDate
+                            );
+
                             Navigator.pop(context);
                           }
                         },

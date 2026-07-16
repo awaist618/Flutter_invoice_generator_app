@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import '../models/invoice_model.dart';
+import 'package:intl/intl.dart';
 
 class InvoiceProvider with ChangeNotifier {
   final List<Invoice> _invoices = [];
@@ -20,6 +21,22 @@ class InvoiceProvider with ChangeNotifier {
 
   int get paidCount => _invoices.where((inv) => inv.status == InvoiceStatus.paid).length;
   int get unpaidCount => _invoices.where((inv) => inv.status == InvoiceStatus.unpaid).length;
+
+  Map<String, double> get monthlyRevenue {
+    Map<String, double> data = {};
+    final now = DateTime.now();
+    for (int i = 5; i >= 0; i--) {
+      DateTime date = DateTime(now.year, now.month - i, 1);
+      String monthName = DateFormat('MMM').format(date);
+      double total = _invoices
+          .where((inv) => inv.date.month == date.month && inv.date.year == date.year && inv.status == InvoiceStatus.paid)
+          .fold(0.0, (sum, inv) => sum + inv.total);
+      data[monthName] = total;
+    }
+    return data;
+  }
+
+  double get revenueGrowth => 12.4; // Demo value
 
   void addInvoice(Invoice invoice) {
     _invoices.add(invoice);

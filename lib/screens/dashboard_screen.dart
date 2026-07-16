@@ -6,6 +6,7 @@ import '../models/invoice_model.dart';
 import 'invoices_list_screen.dart';
 import 'create_invoice_screen.dart';
 import 'settings_screen.dart';
+import 'reports_screen.dart';
 
 class DashboardScreen extends StatefulWidget {
   const DashboardScreen({super.key});
@@ -238,6 +239,15 @@ class _DashboardScreenState extends State<DashboardScreen> {
             context,
             MaterialPageRoute(
               builder: (context) => const SettingsScreen(),
+            ),
+          );
+          return;
+        }
+        if (index == 2) {
+          Navigator.push(
+            context,
+            MaterialPageRoute(
+              builder: (context) => const ReportsScreen(),
             ),
           );
           return;

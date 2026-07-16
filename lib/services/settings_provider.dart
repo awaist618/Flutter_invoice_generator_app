@@ -18,7 +18,7 @@ class SettingsProvider with ChangeNotifier {
     if (_currency.contains('(')) {
       return _currency.split('(').last.replaceAll(')', '');
     }
-    return '$';
+    return r'$';
   }
   double get defaultTaxRate => _defaultTaxRate;
   String get invoicePrefix => _invoicePrefix;

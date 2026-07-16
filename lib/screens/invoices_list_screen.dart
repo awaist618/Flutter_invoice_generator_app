@@ -3,6 +3,7 @@ import 'package:provider/provider.dart';
 import '../services/invoice_provider.dart';
 import '../models/invoice_model.dart';
 import 'package:intl/intl.dart';
+import 'create_invoice_screen.dart';
 
 class InvoicesListScreen extends StatefulWidget {
   const InvoicesListScreen({super.key});
@@ -150,7 +151,7 @@ class _InvoicesListScreenState extends State<InvoicesListScreen> {
           shape: BoxShape.circle,
           boxShadow: [
             BoxShadow(
-              color: const Color(0xFFE25E31).withOpacity(0.3),
+              color: const Color(0xFFE25E31).withAlpha(77),
               blurRadius: 10,
               offset: const Offset(0, 5),
             ),
@@ -158,7 +159,12 @@ class _InvoicesListScreenState extends State<InvoicesListScreen> {
         ),
         child: FloatingActionButton(
           onPressed: () {
-            // Action to create new invoice
+            Navigator.push(
+              context,
+              MaterialPageRoute(
+                builder: (context) => const CreateInvoiceScreen(),
+              ),
+            );
           },
           backgroundColor: Colors.transparent,
           elevation: 0,
@@ -237,7 +243,7 @@ class _InvoicesListScreenState extends State<InvoicesListScreen> {
                       crossAxisAlignment: CrossAxisAlignment.end,
                       children: [
                         Text(
-                          r'$' + NumberFormat("#,##0", "en_US").format(inv.amount),
+                          r'$' + NumberFormat("#,##0", "en_US").format(inv.total),
                           style: const TextStyle(
                             fontWeight: FontWeight.bold,
                             fontSize: 18,
@@ -248,7 +254,7 @@ class _InvoicesListScreenState extends State<InvoicesListScreen> {
                         Container(
                           padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
                           decoration: BoxDecoration(
-                            color: statusColor.withOpacity(0.1),
+                            color: statusColor.withAlpha(25),
                             borderRadius: BorderRadius.circular(10),
                           ),
                           child: Text(

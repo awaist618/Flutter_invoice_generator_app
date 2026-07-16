@@ -3,6 +3,7 @@ import 'package:provider/provider.dart';
 import '../services/invoice_provider.dart';
 import '../models/invoice_model.dart';
 import 'invoices_list_screen.dart';
+import 'create_invoice_screen.dart';
 
 class DashboardScreen extends StatefulWidget {
   const DashboardScreen({super.key});
@@ -20,142 +21,144 @@ class _DashboardScreenState extends State<DashboardScreen> {
 
     return Scaffold(
       backgroundColor: const Color(0xFFF3F2FF),
-      extendBody: true, // Allows the body to go behind the bottom bar
-      body: Stack(
-        children: [
-          // Background Decoration (Top Right)
-          Positioned(
-            top: -60,
-            right: -60,
-            child: Container(
-              width: 250,
-              height: 250,
-              decoration: const BoxDecoration(
-                color: Color(0xFFB4B0FF),
-                shape: BoxShape.circle,
-              ),
-              child: Center(
+      extendBody: true,
+      body: SafeArea(
+        child: SingleChildScrollView(
+          child: Stack(
+            children: [
+              // Background Decoration (Now inside SingleChildScrollView so it scrolls)
+              Positioned(
+                top: -60,
+                right: -60,
                 child: Container(
-                  width: 100,
-                  height: 100,
+                  width: 250,
+                  height: 250,
                   decoration: const BoxDecoration(
-                    color: Color(0xFF3D3B8E),
+                    color: Color(0xFFB4B0FF),
                     shape: BoxShape.circle,
                   ),
-                  child: const Center(
-                    child: Icon(
-                      Icons.notifications_outlined,
-                      color: Colors.white,
-                      size: 30,
+                  child: Center(
+                    child: Container(
+                      width: 100,
+                      height: 100,
+                      decoration: const BoxDecoration(
+                        color: Color(0xFF3D3B8E),
+                        shape: BoxShape.circle,
+                      ),
+                      child: const Center(
+                        child: Icon(
+                          Icons.notifications_outlined,
+                          color: Colors.white,
+                          size: 30,
+                        ),
+                      ),
                     ),
                   ),
                 ),
               ),
-            ),
-          ),
 
-          SafeArea(
-            child: SingleChildScrollView(
-              padding: const EdgeInsets.symmetric(horizontal: 30, vertical: 30),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  // Header
-                  const Text(
-                    'Good morning',
-                    style: TextStyle(
-                      fontSize: 18,
-                      color: Color(0xFF6C699E),
-                      fontFamily: 'Serif',
+              Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 30, vertical: 30),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    // Header
+                    const Text(
+                      'Good morning',
+                      style: TextStyle(
+                        fontSize: 18,
+                        color: Color(0xFF6C699E),
+                        fontFamily: 'Serif',
+                      ),
                     ),
-                  ),
-                  const Text(
-                    'Acme Studio',
-                    style: TextStyle(
-                      fontSize: 32,
-                      fontWeight: FontWeight.bold,
-                      color: Color(0xFF2A2859),
-                      fontFamily: 'Serif',
+                    const Text(
+                      'Acme Studio',
+                      style: TextStyle(
+                        fontSize: 32,
+                        fontWeight: FontWeight.bold,
+                        color: Color(0xFF2A2859),
+                        fontFamily: 'Serif',
+                      ),
                     ),
-                  ),
-                  const SizedBox(height: 30),
+                    const SizedBox(height: 30),
 
-                  // Summary Cards Grid
-                  GridView.count(
-                    shrinkWrap: true,
-                    physics: const NeverScrollableScrollPhysics(),
-                    crossAxisCount: 2,
-                    mainAxisSpacing: 15,
-                    crossAxisSpacing: 15,
-                    childAspectRatio: 3.2, // Ultra-compact height
-                    children: [
-                      _buildSummaryCard(
-                        'Total invoices',
-                        '${provider.totalInvoicesCount}',
-                        const Color(0xFF3D3B8E),
-                      ),
-                      _buildSummaryCard(
-                        'Total revenue',
-                        r'$' + provider.totalRevenue.toStringAsFixed(0),
-                        const Color(0xFFE25E31),
-                      ),
-                      _buildSummaryCard(
-                        'Paid',
-                        '${provider.paidCount}',
-                        const Color(0xFF126E51),
-                      ),
-                      _buildSummaryCard(
-                        'Unpaid',
-                        '${provider.unpaidCount}',
-                        const Color(0xFF962D4D),
-                      ),
-                    ],
-                  ),
-
-                  const SizedBox(height: 40),
-
-                  // Recent Invoices Section Header
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    children: [
-                      const Text(
-                        'Recent invoices',
-                        style: TextStyle(
-                          fontSize: 20,
-                          fontWeight: FontWeight.bold,
-                          color: Color(0xFF2A2859),
-                          fontFamily: 'Serif',
+                    // Summary Cards Grid
+                    GridView.count(
+                      shrinkWrap: true,
+                      physics: const NeverScrollableScrollPhysics(),
+                      crossAxisCount: 2,
+                      mainAxisSpacing: 15,
+                      crossAxisSpacing: 15,
+                      childAspectRatio: 3.2,
+                      children: [
+                        _buildSummaryCard(
+                          'Total invoices',
+                          '${provider.totalInvoicesCount}',
+                          const Color(0xFF3D3B8E),
                         ),
-                      ),
-                      TextButton(
-                        onPressed: () {
-                          Navigator.push(
-                            context,
-                            MaterialPageRoute(
-                              builder: (context) => const InvoicesListScreen(),
-                            ),
-                          );
-                        },
-                        child: const Text(
-                          'View all',
+                        _buildSummaryCard(
+                          'Total revenue',
+                          r'$' + provider.totalRevenue.toStringAsFixed(0),
+                          const Color(0xFFE25E31),
+                        ),
+                        _buildSummaryCard(
+                          'Paid',
+                          '${provider.paidCount}',
+                          const Color(0xFF126E51),
+                        ),
+                        _buildSummaryCard(
+                          'Unpaid',
+                          '${provider.unpaidCount}',
+                          const Color(0xFF962D4D),
+                        ),
+                      ],
+                    ),
+
+                    const SizedBox(height: 40),
+
+                    // Recent Invoices Section Header
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        const Text(
+                          'Recent invoices',
                           style: TextStyle(
-                            color: Color(0xFFE25E31),
-                            fontSize: 16,
+                            fontSize: 20,
+                            fontWeight: FontWeight.bold,
+                            color: Color(0xFF2A2859),
+                            fontFamily: 'Serif',
                           ),
                         ),
-                      ),
-                    ],
-                  ),
-                  const SizedBox(height: 10),
+                        TextButton(
+                          onPressed: () {
+                            Navigator.push(
+                              context,
+                              MaterialPageRoute(
+                                builder: (context) => const InvoicesListScreen(),
+                              ),
+                            );
+                          },
+                          child: const Text(
+                            'View all',
+                            style: TextStyle(
+                              color: Color(0xFFE25E31),
+                              fontSize: 16,
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 10),
 
-                  // Invoice List
-                  ...provider.recentInvoices.map((inv) => _buildInvoiceTile(inv)),
-                  const SizedBox(height: 100), // Extra space for the floating bottom bar
-                ],
+                    // Invoice List
+                    ...provider.recentInvoices.map((inv) => _buildInvoiceTile(inv)),
+                    const SizedBox(height: 100),
+                  ],
+                ),
               ),
-            ),
+            ],
           ),
-        ],
+        ),
       ),
       floatingActionButton: Container(
         height: 65,
@@ -165,14 +168,21 @@ class _DashboardScreenState extends State<DashboardScreen> {
           shape: BoxShape.circle,
           boxShadow: [
             BoxShadow(
-              color: const Color(0xFFE25E31).withOpacity(0.3),
+              color: const Color(0xFFE25E31).withAlpha(77),
               blurRadius: 10,
               offset: const Offset(0, 5),
             ),
           ],
         ),
         child: FloatingActionButton(
-          onPressed: () {},
+          onPressed: () {
+            Navigator.push(
+              context,
+              MaterialPageRoute(
+                builder: (context) => const CreateInvoiceScreen(),
+              ),
+            );
+          },
           backgroundColor: Colors.transparent,
           elevation: 0,
           child: const Icon(Icons.add, color: Colors.white, size: 35),
@@ -187,7 +197,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
           borderRadius: BorderRadius.circular(35),
           boxShadow: [
             BoxShadow(
-              color: Colors.black.withOpacity(0.04),
+              color: Colors.black.withAlpha(10),
               blurRadius: 20,
               offset: const Offset(0, 10),
             ),
@@ -340,7 +350,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
             crossAxisAlignment: CrossAxisAlignment.end,
             children: [
               Text(
-                r'$' + inv.amount.toStringAsFixed(0),
+                r'$' + inv.total.toStringAsFixed(0),
                 style: const TextStyle(
                   fontWeight: FontWeight.bold,
                   fontSize: 18,
@@ -351,7 +361,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
               Container(
                 padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
                 decoration: BoxDecoration(
-                  color: statusColor.withOpacity(0.15),
+                  color: statusColor.withAlpha(38),
                   borderRadius: BorderRadius.circular(10),
                 ),
                 child: Text(

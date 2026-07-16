@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 class SettingsProvider with ChangeNotifier {
   String _companyName = 'Acme Studio';
   String _companyEmail = 'hello@acmestudio.com';
+  String _companyAddress = '42 Market St, Austin, TX';
   String _currency = r'USD ($)';
   double _defaultTaxRate = 8.0;
   String _invoicePrefix = 'INV-';
@@ -12,6 +13,7 @@ class SettingsProvider with ChangeNotifier {
   // Getters
   String get companyName => _companyName;
   String get companyEmail => _companyEmail;
+  String get companyAddress => _companyAddress;
   String get currency => _currency;
   
   String get currencySymbol {

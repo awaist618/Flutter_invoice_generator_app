@@ -7,6 +7,7 @@ import 'invoices_list_screen.dart';
 import 'create_invoice_screen.dart';
 import 'settings_screen.dart';
 import 'reports_screen.dart';
+import 'invoice_detail_screen.dart';
 
 class DashboardScreen extends StatefulWidget {
   const DashboardScreen({super.key});
@@ -22,9 +23,12 @@ class _DashboardScreenState extends State<DashboardScreen> {
   Widget build(BuildContext context) {
     final provider = Provider.of<InvoiceProvider>(context);
     final settings = Provider.of<SettingsProvider>(context);
+    final theme = Theme.of(context);
+    final colorScheme = theme.colorScheme;
+    final isDark = theme.brightness == Brightness.dark;
 
     return Scaffold(
-      backgroundColor: const Color(0xFFF3F2FF),
+      backgroundColor: theme.scaffoldBackgroundColor,
       extendBody: true,
       body: SafeArea(
         child: SingleChildScrollView(
@@ -37,16 +41,16 @@ class _DashboardScreenState extends State<DashboardScreen> {
                 child: Container(
                   width: 250,
                   height: 250,
-                  decoration: const BoxDecoration(
-                    color: Color(0xFFB4B0FF),
+                  decoration: BoxDecoration(
+                    color: const Color(0xFFB4B0FF).withOpacity(isDark ? 0.3 : 1.0),
                     shape: BoxShape.circle,
                   ),
                   child: Center(
                     child: Container(
                       width: 100,
                       height: 100,
-                      decoration: const BoxDecoration(
-                        color: Color(0xFF3D3B8E),
+                      decoration: BoxDecoration(
+                        color: colorScheme.primary,
                         shape: BoxShape.circle,
                       ),
                       child: const Center(
@@ -67,20 +71,20 @@ class _DashboardScreenState extends State<DashboardScreen> {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     // Header
-                    const Text(
+                    Text(
                       'Good morning',
                       style: TextStyle(
                         fontSize: 18,
-                        color: Color(0xFF6C699E),
+                        color: colorScheme.onSurfaceVariant,
                         fontFamily: 'Serif',
                       ),
                     ),
                     Text(
                       settings.companyName,
-                      style: const TextStyle(
+                      style: TextStyle(
                         fontSize: 32,
                         fontWeight: FontWeight.bold,
-                        color: Color(0xFF2A2859),
+                        color: colorScheme.onSurface,
                         fontFamily: 'Serif',
                       ),
                     ),
@@ -98,12 +102,12 @@ class _DashboardScreenState extends State<DashboardScreen> {
                         _buildSummaryCard(
                           'Total invoices',
                           '${provider.totalInvoicesCount}',
-                          const Color(0xFF3D3B8E),
+                          colorScheme.primary,
                         ),
                         _buildSummaryCard(
                           'Total revenue',
                           settings.currencySymbol + provider.totalRevenue.toStringAsFixed(0),
-                          const Color(0xFFE25E31),
+                          colorScheme.secondary,
                         ),
                         _buildSummaryCard(
                           'Paid',
@@ -124,38 +128,42 @@ class _DashboardScreenState extends State<DashboardScreen> {
                     Row(
                       mainAxisAlignment: MainAxisAlignment.spaceBetween,
                       children: [
-                        const Text(
+                        Text(
                           'Recent invoices',
                           style: TextStyle(
                             fontSize: 20,
                             fontWeight: FontWeight.bold,
-                            color: Color(0xFF2A2859),
+                            color: colorScheme.onSurface,
                             fontFamily: 'Serif',
                           ),
                         ),
-                        TextButton(
-                          onPressed: () {
-                            Navigator.push(
-                              context,
-                              MaterialPageRoute(
-                                builder: (context) => const InvoicesListScreen(),
+                        if (provider.invoices.isNotEmpty)
+                          TextButton(
+                            onPressed: () {
+                              Navigator.push(
+                                context,
+                                MaterialPageRoute(
+                                  builder: (context) => const InvoicesListScreen(),
+                                ),
+                              );
+                            },
+                            child: Text(
+                              'View all',
+                              style: TextStyle(
+                                color: colorScheme.secondary,
+                                fontSize: 16,
                               ),
-                            );
-                          },
-                          child: const Text(
-                            'View all',
-                            style: TextStyle(
-                              color: Color(0xFFE25E31),
-                              fontSize: 16,
                             ),
                           ),
-                        ),
                       ],
                     ),
                     const SizedBox(height: 10),
 
-                    // Invoice List
-                    ...provider.recentInvoices.map((inv) => _buildInvoiceTile(inv)),
+                    // Invoice List or Empty State
+                    if (provider.invoices.isEmpty)
+                      _buildEmptyState(colorScheme, isDark)
+                    else
+                      ...provider.recentInvoices.map((inv) => _buildInvoiceTile(inv, colorScheme, isDark)),
                     const SizedBox(height: 100),
                   ],
                 ),
@@ -168,11 +176,11 @@ class _DashboardScreenState extends State<DashboardScreen> {
         height: 65,
         width: 65,
         decoration: BoxDecoration(
-          color: const Color(0xFFE25E31),
+          color: colorScheme.secondary,
           shape: BoxShape.circle,
           boxShadow: [
             BoxShadow(
-              color: const Color(0xFFE25E31).withAlpha(77),
+              color: colorScheme.secondary.withAlpha(77),
               blurRadius: 10,
               offset: const Offset(0, 5),
             ),
@@ -197,31 +205,74 @@ class _DashboardScreenState extends State<DashboardScreen> {
         margin: const EdgeInsets.fromLTRB(20, 0, 20, 25),
         height: 85,
         decoration: BoxDecoration(
-          color: Colors.white,
+          color: colorScheme.surface,
           borderRadius: BorderRadius.circular(35),
           boxShadow: [
             BoxShadow(
-              color: Colors.black.withAlpha(10),
+              color: Colors.black.withAlpha(isDark ? 50 : 10),
               blurRadius: 20,
               offset: const Offset(0, 10),
             ),
           ],
+          border: isDark ? Border.all(color: Colors.white12) : null,
         ),
         child: Row(
           mainAxisAlignment: MainAxisAlignment.spaceEvenly,
           children: [
-            _buildNavItem(Icons.home_outlined, 'Home', 0),
-            _buildNavItem(Icons.description_outlined, 'Invoices', 1),
+            _buildNavItem(Icons.home_outlined, 'Home', 0, colorScheme),
+            _buildNavItem(Icons.description_outlined, 'Invoices', 1, colorScheme),
             const SizedBox(width: 45), // Space for centered FAB
-            _buildNavItem(Icons.bar_chart_outlined, 'Reports', 2),
-            _buildNavItem(Icons.settings_outlined, 'Settings', 3),
+            _buildNavItem(Icons.bar_chart_outlined, 'Reports', 2, colorScheme),
+            _buildNavItem(Icons.settings_outlined, 'Settings', 3, colorScheme),
           ],
         ),
       ),
     );
   }
 
-  Widget _buildNavItem(IconData icon, String label, int index) {
+  Widget _buildEmptyState(ColorScheme colorScheme, bool isDark) {
+    return Center(
+      child: Padding(
+        padding: const EdgeInsets.symmetric(vertical: 40),
+        child: Column(
+          children: [
+            Container(
+              padding: const EdgeInsets.all(20),
+              decoration: BoxDecoration(
+                color: colorScheme.surface,
+                shape: BoxShape.circle,
+                border: isDark ? Border.all(color: Colors.white12) : null,
+              ),
+              child: Icon(
+                Icons.description_outlined,
+                size: 60,
+                color: colorScheme.onSurfaceVariant.withOpacity(0.5),
+              ),
+            ),
+            const SizedBox(height: 20),
+            Text(
+              'No invoices yet',
+              style: TextStyle(
+                fontSize: 18,
+                fontWeight: FontWeight.bold,
+                color: colorScheme.onSurface,
+              ),
+            ),
+            const SizedBox(height: 8),
+            Text(
+              'Tap the + button to create your first one',
+              textAlign: TextAlign.center,
+              style: TextStyle(
+                color: colorScheme.onSurfaceVariant,
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildNavItem(IconData icon, String label, int index, ColorScheme colorScheme) {
     bool isSelected = _selectedIndex == index;
     return GestureDetector(
       onTap: () {
@@ -262,19 +313,19 @@ class _DashboardScreenState extends State<DashboardScreen> {
           Container(
             padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
             decoration: BoxDecoration(
-              color: isSelected ? const Color(0xFFF3F2FF) : Colors.transparent,
+              color: isSelected ? colorScheme.secondary.withOpacity(0.1) : Colors.transparent,
               borderRadius: BorderRadius.circular(15),
             ),
             child: Icon(
               icon,
-              color: isSelected ? const Color(0xFFE25E31) : const Color(0xFF6C699E),
+              color: isSelected ? colorScheme.secondary : colorScheme.onSurfaceVariant,
               size: 26,
             ),
           ),
           Text(
             label,
             style: TextStyle(
-              color: isSelected ? const Color(0xFFE25E31) : const Color(0xFF6C699E),
+              color: isSelected ? colorScheme.secondary : colorScheme.onSurfaceVariant,
               fontSize: 12,
               fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
             ),
@@ -319,7 +370,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
     );
   }
 
-  Widget _buildInvoiceTile(Invoice inv) {
+  Widget _buildInvoiceTile(Invoice inv, ColorScheme colorScheme, bool isDark) {
     Color statusColor;
     String statusLabel;
     
@@ -338,66 +389,95 @@ class _DashboardScreenState extends State<DashboardScreen> {
         break;
     }
 
-    return Container(
-      margin: const EdgeInsets.only(bottom: 15),
-      padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 15),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(20),
-      ),
-      child: Row(
-        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-        children: [
-          Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text(
-                inv.invoiceNumber,
-                style: const TextStyle(
-                  fontWeight: FontWeight.bold,
-                  fontSize: 18,
-                  color: Color(0xFF2A2859),
-                ),
-              ),
-              Text(
-                inv.customerName,
-                style: const TextStyle(
-                  color: Color(0xFF6C699E),
-                  fontSize: 14,
-                ),
-              ),
-            ],
+    return GestureDetector(
+      onTap: () {
+        Navigator.push(
+          context,
+          MaterialPageRoute(
+            builder: (context) => InvoiceDetailScreen(invoice: inv),
           ),
-          Column(
-            crossAxisAlignment: CrossAxisAlignment.end,
-            children: [
-              Text(
-                Provider.of<SettingsProvider>(context, listen: false).currencySymbol + inv.total.toStringAsFixed(0),
-                style: const TextStyle(
-                  fontWeight: FontWeight.bold,
-                  fontSize: 18,
-                  color: Color(0xFF2A2859),
-                ),
+        );
+      },
+      child: Container(
+        margin: const EdgeInsets.only(bottom: 15),
+        padding: const EdgeInsets.all(15),
+        decoration: BoxDecoration(
+          color: colorScheme.surface,
+          borderRadius: BorderRadius.circular(20),
+          border: isDark ? Border.all(color: Colors.white12) : null,
+          boxShadow: isDark ? null : [
+            BoxShadow(
+              color: Colors.black.withOpacity(0.02),
+              blurRadius: 10,
+              offset: const Offset(0, 4),
+            ),
+          ],
+        ),
+        child: Row(
+          children: [
+            Container(
+              width: 50,
+              height: 50,
+              decoration: BoxDecoration(
+                color: statusColor.withOpacity(0.1),
+                borderRadius: BorderRadius.circular(15),
               ),
-              const SizedBox(height: 5),
-              Container(
-                padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
-                decoration: BoxDecoration(
-                  color: statusColor.withAlpha(38),
-                  borderRadius: BorderRadius.circular(10),
-                ),
-                child: Text(
-                  statusLabel,
+              child: Icon(Icons.receipt_long_outlined, color: statusColor),
+            ),
+            const SizedBox(width: 15),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    inv.customerName,
+                    style: TextStyle(
+                      fontWeight: FontWeight.bold,
+                      fontSize: 16,
+                      color: colorScheme.onSurface,
+                    ),
+                  ),
+                  Text(
+                    inv.invoiceNumber,
+                    style: TextStyle(
+                      color: colorScheme.onSurfaceVariant,
+                      fontSize: 13,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            Column(
+              crossAxisAlignment: CrossAxisAlignment.end,
+              children: [
+                Text(
+                  Provider.of<SettingsProvider>(context, listen: false).currencySymbol + inv.total.toStringAsFixed(0),
                   style: TextStyle(
-                    color: statusColor,
-                    fontSize: 12,
                     fontWeight: FontWeight.bold,
+                    fontSize: 16,
+                    color: colorScheme.onSurface,
                   ),
                 ),
-              ),
-            ],
-          ),
-        ],
+                const SizedBox(height: 5),
+                Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                  decoration: BoxDecoration(
+                    color: statusColor.withOpacity(0.15),
+                    borderRadius: BorderRadius.circular(8),
+                  ),
+                  child: Text(
+                    statusLabel,
+                    style: TextStyle(
+                      color: statusColor,
+                      fontSize: 10,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ],
+        ),
       ),
     );
   }

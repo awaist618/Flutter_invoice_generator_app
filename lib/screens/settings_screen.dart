@@ -22,8 +22,11 @@ class SettingsScreen extends StatelessWidget {
   Widget build(BuildContext context) {
     final settings = Provider.of<SettingsProvider>(context);
     final theme = Theme.of(context);
+    final colorScheme = theme.colorScheme;
+    final isDark = theme.brightness == Brightness.dark;
 
     return Scaffold(
+      backgroundColor: theme.scaffoldBackgroundColor,
       body: Stack(
         children: [
           // Background Shape
@@ -33,8 +36,8 @@ class SettingsScreen extends StatelessWidget {
             child: Container(
               width: 150,
               height: 150,
-              decoration: const BoxDecoration(
-                color: Color(0xFFFFB4C4), // Pinkish color from image
+              decoration: BoxDecoration(
+                color: const Color(0xFFFFB4C4).withOpacity(isDark ? 0.3 : 1.0),
                 shape: BoxShape.circle,
               ),
             ),
@@ -51,14 +54,14 @@ class SettingsScreen extends StatelessWidget {
                         padding: EdgeInsets.zero,
                         alignment: Alignment.centerLeft,
                         onPressed: () => Navigator.pop(context),
-                        icon: const Icon(Icons.arrow_back, color: Color(0xFF2A2859), size: 30),
+                        icon: Icon(Icons.arrow_back, color: colorScheme.onSurface, size: 30),
                       ),
-                      const Text(
+                      Text(
                         'Settings',
                         style: TextStyle(
                           fontSize: 28,
                           fontWeight: FontWeight.bold,
-                          color: Color(0xFF2A2859),
+                          color: colorScheme.onSurface,
                           fontFamily: 'Serif',
                         ),
                       ),
@@ -69,41 +72,44 @@ class SettingsScreen extends StatelessWidget {
                   // Company Logo Section
                   Row(
                     children: [
-                      Container(
-                        width: 80,
-                        height: 80,
-                        decoration: BoxDecoration(
-                          color: const Color(0xFF3D3B8E),
-                          borderRadius: BorderRadius.circular(20),
-                          image: settings.logoPath != null
-                              ? DecorationImage(
-                                  image: FileImage(File(settings.logoPath!)),
-                                  fit: BoxFit.cover,
-                                )
+                      GestureDetector(
+                        onTap: () => _pickLogo(context),
+                        child: Container(
+                          width: 80,
+                          height: 80,
+                          decoration: BoxDecoration(
+                            color: colorScheme.primary,
+                            borderRadius: BorderRadius.circular(20),
+                            image: settings.logoPath != null
+                                ? DecorationImage(
+                                    image: FileImage(File(settings.logoPath!)),
+                                    fit: BoxFit.cover,
+                                  )
+                                : null,
+                          ),
+                          child: settings.logoPath == null
+                              ? const Icon(Icons.business, color: Colors.white, size: 40)
                               : null,
                         ),
-                        child: settings.logoPath == null
-                            ? const Icon(Icons.business, color: Colors.white, size: 40)
-                            : null,
                       ),
                       const SizedBox(width: 20),
                       Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          const Text(
+                          Text(
                             'Company logo',
                             style: TextStyle(
                               fontSize: 18,
-                              color: Color(0xFF2A2859),
+                              color: colorScheme.onSurface,
                               fontWeight: FontWeight.w500,
                             ),
                           ),
                           GestureDetector(
                             onTap: () => _pickLogo(context),
-                            child: const Text(
+                            child: Text(
                               'Upload new logo',
                               style: TextStyle(
-                                color: Color(0xFFE25E31),
+                                color: colorScheme.secondary,
                                 fontSize: 16,
                               ),
                             ),
@@ -114,25 +120,30 @@ class SettingsScreen extends StatelessWidget {
                   ),
                   const SizedBox(height: 30),
 
-                  _buildSectionTitle('Company details'),
+                  _buildSectionTitle('Company details', colorScheme),
                   const SizedBox(height: 10),
                   _buildTextField(
                     initialValue: settings.companyName,
                     onChanged: (val) => settings.updateCompanyName(val),
+                    colorScheme: colorScheme,
+                    isDark: isDark,
                   ),
                   const SizedBox(height: 10),
                   _buildTextField(
                     initialValue: settings.companyEmail,
                     onChanged: (val) => settings.updateCompanyEmail(val),
+                    colorScheme: colorScheme,
+                    isDark: isDark,
                   ),
                   const SizedBox(height: 30),
 
-                  _buildSectionTitle('Invoice preferences'),
+                  _buildSectionTitle('Invoice preferences', colorScheme),
                   const SizedBox(height: 15),
                   Container(
                     decoration: BoxDecoration(
-                      color: Colors.white,
+                      color: colorScheme.surface,
                       borderRadius: BorderRadius.circular(25),
+                      border: isDark ? Border.all(color: Colors.white12) : null,
                     ),
                     child: Column(
                       children: [
@@ -140,32 +151,35 @@ class SettingsScreen extends StatelessWidget {
                           'Currency',
                           settings.currency,
                           onTap: () => _showCurrencyDialog(context, settings),
+                          colorScheme: colorScheme,
                         ),
-                        const Divider(height: 1, indent: 20, endIndent: 20),
+                        Divider(height: 1, indent: 20, endIndent: 20, color: isDark ? Colors.white12 : Colors.grey.shade200),
                         _buildPreferenceItem(
                           'Default tax rate',
                           '${settings.defaultTaxRate.toStringAsFixed(0)}%',
                           onTap: () => _showTaxDialog(context, settings),
+                          colorScheme: colorScheme,
                         ),
-                        const Divider(height: 1, indent: 20, endIndent: 20),
+                        Divider(height: 1, indent: 20, endIndent: 20, color: isDark ? Colors.white12 : Colors.grey.shade200),
                         _buildPreferenceItem(
                           'Invoice prefix',
                           settings.invoicePrefix,
                           onTap: () => _showPrefixDialog(context, settings),
+                          colorScheme: colorScheme,
                         ),
-                        const Divider(height: 1, indent: 20, endIndent: 20),
+                        Divider(height: 1, indent: 20, endIndent: 20, color: isDark ? Colors.white12 : Colors.grey.shade200),
                         Padding(
                           padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 15),
                           child: Row(
                             mainAxisAlignment: MainAxisAlignment.spaceBetween,
                             children: [
-                              const Text(
+                              Text(
                                 'Dark mode',
-                                style: TextStyle(fontSize: 16, color: Color(0xFF2A2859)),
+                                style: TextStyle(fontSize: 16, color: colorScheme.onSurface),
                               ),
                               Switch(
                                 value: settings.isDarkMode,
-                                activeColor: const Color(0xFF3D3B8E),
+                                activeColor: colorScheme.primary,
                                 onChanged: (val) => settings.toggleDarkMode(val),
                               ),
                             ],
@@ -210,23 +224,29 @@ class SettingsScreen extends StatelessWidget {
     );
   }
 
-  Widget _buildSectionTitle(String title) {
+  Widget _buildSectionTitle(String title, ColorScheme colorScheme) {
     return Text(
       title,
-      style: const TextStyle(
+      style: TextStyle(
         fontSize: 16,
-        color: Color(0xFF6C699E),
+        color: colorScheme.onSurfaceVariant,
         fontWeight: FontWeight.w500,
       ),
     );
   }
 
-  Widget _buildTextField({required String initialValue, required Function(String) onChanged}) {
+  Widget _buildTextField({
+    required String initialValue,
+    required Function(String) onChanged,
+    required ColorScheme colorScheme,
+    required bool isDark,
+  }) {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 20),
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: colorScheme.surface,
         borderRadius: BorderRadius.circular(5),
+        border: isDark ? Border.all(color: Colors.white12) : null,
       ),
       child: TextFormField(
         initialValue: initialValue,
@@ -234,12 +254,12 @@ class SettingsScreen extends StatelessWidget {
         decoration: const InputDecoration(
           border: InputBorder.none,
         ),
-        style: const TextStyle(color: Color(0xFF2A2859), fontSize: 18),
+        style: TextStyle(color: colorScheme.onSurface, fontSize: 18),
       ),
     );
   }
 
-  Widget _buildPreferenceItem(String title, String value, {required VoidCallback onTap}) {
+  Widget _buildPreferenceItem(String title, String value, {required VoidCallback onTap, required ColorScheme colorScheme}) {
     return InkWell(
       onTap: onTap,
       child: Padding(
@@ -247,8 +267,8 @@ class SettingsScreen extends StatelessWidget {
         child: Row(
           mainAxisAlignment: MainAxisAlignment.spaceBetween,
           children: [
-            Text(title, style: const TextStyle(fontSize: 16, color: Color(0xFF2A2859))),
-            Text(value, style: const TextStyle(fontSize: 16, color: Color(0xFF6C699E))),
+            Text(title, style: TextStyle(fontSize: 16, color: colorScheme.onSurface)),
+            Text(value, style: TextStyle(fontSize: 16, color: colorScheme.onSurfaceVariant)),
           ],
         ),
       ),

@@ -7,8 +7,12 @@ class WelcomeScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final colorScheme = theme.colorScheme;
+    final isDark = theme.brightness == Brightness.dark;
+
     return Scaffold(
-      backgroundColor: const Color(0xFFF3F2FF),
+      backgroundColor: theme.scaffoldBackgroundColor,
       body: Stack(
         children: [
           Positioned(
@@ -17,8 +21,8 @@ class WelcomeScreen extends StatelessWidget {
             child: Container(
               width: 200,
               height: 200,
-              decoration: const BoxDecoration(
-                color: Color(0xFFB4B0FF),
+              decoration: BoxDecoration(
+                color: const Color(0xFFB4B0FF).withOpacity(isDark ? 0.3 : 1.0),
                 shape: BoxShape.circle,
               ),
             ),
@@ -32,7 +36,7 @@ class WelcomeScreen extends StatelessWidget {
                 width: 40,
                 height: 40,
                 decoration: BoxDecoration(
-                  color: const Color(0xFF66D1A4),
+                  color: const Color(0xFF66D1A4).withOpacity(isDark ? 0.3 : 1.0),
                   borderRadius: BorderRadius.circular(10),
                 ),
               ),
@@ -45,7 +49,7 @@ class WelcomeScreen extends StatelessWidget {
               width: 200,
               height: 200,
               decoration: BoxDecoration(
-                color: const Color(0xFFFF9F69),
+                color: const Color(0xFFFF9F69).withOpacity(isDark ? 0.3 : 1.0),
                 shape: BoxShape.circle,
               ),
             ),
@@ -61,7 +65,7 @@ class WelcomeScreen extends StatelessWidget {
                       width: 140,
                       height: 140,
                       decoration: BoxDecoration(
-                        color: const Color(0xFF3D3B8E),
+                        color: colorScheme.primary,
                         borderRadius: BorderRadius.circular(35),
                       ),
                       child: const Icon(
@@ -71,19 +75,19 @@ class WelcomeScreen extends StatelessWidget {
                       ),
                     ),
                     const SizedBox(height: 40),
-                    const Text(
+                    Text(
                       'Invoicely',
                       style: TextStyle(
                         fontSize: 40,
-                        color: Color(0xFF2A2859),
+                        color: colorScheme.onSurface,
                         fontWeight: FontWeight.bold,
                         fontFamily: 'Serif',
                       ),
                     ),
                     const SizedBox(height: 10),
-                    const Text(
+                    Text(
                       'Create, track, and get paid faster',
-                      style: TextStyle(fontSize: 18, color: Color(0xFF6C699E)),
+                      style: TextStyle(fontSize: 18, color: colorScheme.onSurfaceVariant),
                     ),
 
                     const SizedBox(height: 60),
@@ -97,7 +101,7 @@ class WelcomeScreen extends StatelessWidget {
                               builder: (context) => const SignupScreen(),),);
                         },
                         style: ElevatedButton.styleFrom(
-                          backgroundColor: const Color(0xFFE25E31),
+                          backgroundColor: colorScheme.secondary,
                           foregroundColor: Colors.white,
                           shape: RoundedRectangleBorder(
                             borderRadius: BorderRadius.circular(10),
@@ -127,9 +131,9 @@ class WelcomeScreen extends StatelessWidget {
                           );
                         },
                         style: OutlinedButton.styleFrom(
-                          side: const BorderSide(color: Color(0xFF2A2859)),
+                          side: BorderSide(color: colorScheme.onSurface),
 
-                          foregroundColor: const Color(0xFF2A2859),
+                          foregroundColor: colorScheme.onSurface,
                           shape: RoundedRectangleBorder(
                             borderRadius: BorderRadius.circular(10),
                           ),

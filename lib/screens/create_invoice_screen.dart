@@ -17,6 +17,8 @@ class _CreateInvoiceScreenState extends State<CreateInvoiceScreen> {
   final _formKey = GlobalKey<FormState>();
   final _nameController = TextEditingController();
   final _emailController = TextEditingController();
+  final _notesController = TextEditingController();
+  final _paymentInstructionsController = TextEditingController();
   
   DateTime _invoiceDate = DateTime.now();
   DateTime _dueDate = DateTime.now().add(const Duration(days: 14));
@@ -65,25 +67,48 @@ class _CreateInvoiceScreenState extends State<CreateInvoiceScreen> {
     final nameController = TextEditingController();
     final qtyController = TextEditingController(text: '1');
     final priceController = TextEditingController();
+    final itemFormKey = GlobalKey<FormState>();
 
     showDialog(
       context: context,
       builder: (context) => AlertDialog(
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
-        title: const Text('Add New Item', style: TextStyle(color: Color(0xFF2A2859), fontWeight: FontWeight.bold)),
-        content: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            _buildDialogField(nameController, 'Item name', TextInputType.text),
-            const SizedBox(height: 10),
-            Row(
-              children: [
-                Expanded(child: _buildDialogField(qtyController, 'Qty', TextInputType.number)),
-                const SizedBox(width: 10),
-                Expanded(child: _buildDialogField(priceController, 'Price', TextInputType.number)),
-              ],
-            ),
-          ],
+        backgroundColor: Theme.of(context).colorScheme.surface,
+        title: Text('Add New Item', 
+          style: TextStyle(
+            color: Theme.of(context).colorScheme.onSurface, 
+            fontWeight: FontWeight.bold
+          )
+        ),
+        content: Form(
+          key: itemFormKey,
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              _buildDialogField(nameController, 'Item name', TextInputType.text, (val) => val!.isEmpty ? 'Enter item name' : null),
+              const SizedBox(height: 10),
+              Row(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Expanded(
+                    child: _buildDialogField(qtyController, 'Qty', TextInputType.number, (val) {
+                      if (val!.isEmpty) return 'Required';
+                      if (int.tryParse(val) == null) return 'Invalid';
+                      return null;
+                    }),
+                  ),
+                  const SizedBox(width: 10),
+                  Expanded(
+                    child: _buildDialogField(priceController, 'Price', TextInputType.number, (val) {
+                      if (val!.isEmpty) return 'Required';
+                      if (double.tryParse(val) == null) return 'Invalid';
+                      return null;
+                    }),
+                  ),
+                ],
+              ),
+            ],
+          ),
         ),
         actions: [
           TextButton(
@@ -92,7 +117,7 @@ class _CreateInvoiceScreenState extends State<CreateInvoiceScreen> {
           ),
           ElevatedButton(
             onPressed: () {
-              if (nameController.text.isNotEmpty && priceController.text.isNotEmpty) {
+              if (itemFormKey.currentState!.validate()) {
                 setState(() {
                   _items.add(InvoiceItem(
                     name: nameController.text,
@@ -104,7 +129,7 @@ class _CreateInvoiceScreenState extends State<CreateInvoiceScreen> {
               }
             },
             style: ElevatedButton.styleFrom(
-              backgroundColor: const Color(0xFF3D3B8E),
+              backgroundColor: Theme.of(context).colorScheme.primary,
               foregroundColor: Colors.white,
               shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
             ),
@@ -115,16 +140,20 @@ class _CreateInvoiceScreenState extends State<CreateInvoiceScreen> {
     );
   }
 
-  Widget _buildDialogField(TextEditingController controller, String hint, TextInputType type) {
-    return TextField(
+  Widget _buildDialogField(TextEditingController controller, String hint, TextInputType type, String? Function(String?)? validator) {
+    return TextFormField(
       controller: controller,
       keyboardType: type,
+      style: TextStyle(color: Theme.of(context).colorScheme.onSurface),
       decoration: InputDecoration(
         hintText: hint,
+        hintStyle: TextStyle(color: Theme.of(context).colorScheme.onSurfaceVariant),
         filled: true,
-        fillColor: const Color(0xFFF3F2FF),
+        fillColor: Theme.of(context).brightness == Brightness.dark ? Colors.white.withOpacity(0.05) : const Color(0xFFF3F2FF),
         border: OutlineInputBorder(borderRadius: BorderRadius.circular(10), borderSide: BorderSide.none),
+        errorStyle: const TextStyle(fontSize: 10),
       ),
+      validator: validator,
     );
   }
 
@@ -135,11 +164,15 @@ class _CreateInvoiceScreenState extends State<CreateInvoiceScreen> {
   @override
   Widget build(BuildContext context) {
     final settings = Provider.of<SettingsProvider>(context);
+    final theme = Theme.of(context);
+    final colorScheme = theme.colorScheme;
+    final isDark = theme.brightness == Brightness.dark;
     final subtotal = _calculateSubtotal();
     final taxAmount = _calculateTax(settings.defaultTaxRate);
     final total = _calculateTotal(settings.defaultTaxRate);
+
     return Scaffold(
-      backgroundColor: const Color(0xFFF3F2FF),
+      backgroundColor: theme.scaffoldBackgroundColor,
       body: Stack(
         children: [
           // Background Decoration (Top Right)
@@ -149,16 +182,16 @@ class _CreateInvoiceScreenState extends State<CreateInvoiceScreen> {
             child: Container(
               width: 180,
               height: 180,
-              decoration: const BoxDecoration(
-                color: Color(0xFF66D1A4),
+              decoration: BoxDecoration(
+                color: const Color(0xFF66D1A4).withOpacity(isDark ? 0.3 : 1.0),
                 shape: BoxShape.circle,
               ),
               child: Center(
                 child: Container(
                   width: 60,
                   height: 60,
-                  decoration: const BoxDecoration(
-                    color: Color(0xFF126E51),
+                  decoration: BoxDecoration(
+                    color: const Color(0xFF126E51).withOpacity(isDark ? 0.5 : 1.0),
                     shape: BoxShape.circle,
                   ),
                 ),
@@ -178,15 +211,15 @@ class _CreateInvoiceScreenState extends State<CreateInvoiceScreen> {
                       padding: EdgeInsets.zero,
                       alignment: Alignment.centerLeft,
                       onPressed: () => Navigator.pop(context),
-                      icon: const Icon(Icons.arrow_back, color: Color(0xFF2A2859), size: 30),
+                      icon: Icon(Icons.arrow_back, color: colorScheme.onSurface, size: 30),
                     ),
-                    const Center(
+                    Center(
                       child: Text(
                         'New invoice',
                         style: TextStyle(
                           fontSize: 28,
                           fontWeight: FontWeight.bold,
-                          color: Color(0xFF2A2859),
+                          color: colorScheme.onSurface,
                           fontFamily: 'Serif',
                         ),
                       ),
@@ -196,32 +229,32 @@ class _CreateInvoiceScreenState extends State<CreateInvoiceScreen> {
                     // Top Info Row
                     Row(
                       children: [
-                        _buildTopInfoCard('Invoice no.', _generatedInvoiceNo.isEmpty ? 'Loading...' : _generatedInvoiceNo),
+                        _buildTopInfoCard('Invoice no.', _generatedInvoiceNo.isEmpty ? 'Loading...' : _generatedInvoiceNo, colorScheme, isDark),
                         const SizedBox(width: 10),
-                        _buildTopInfoCard('Invoice date', DateFormat('MMM dd').format(_invoiceDate)),
+                        _buildTopInfoCard('Invoice date', DateFormat('MMM dd').format(_invoiceDate), colorScheme, isDark),
                         const SizedBox(width: 10),
                         GestureDetector(
                           onTap: _selectDueDate,
-                          child: _buildTopInfoCard('Due date', DateFormat('MMM dd').format(_dueDate)),
+                          child: _buildTopInfoCard('Due date', DateFormat('MMM dd').format(_dueDate), colorScheme, isDark),
                         ),
                       ],
                     ),
                     const SizedBox(height: 30),
 
                     // Customer Section
-                    const Text(
+                    Text(
                       'Customer',
                       style: TextStyle(
                         fontSize: 18,
                         fontWeight: FontWeight.bold,
-                        color: Color(0xFF2A2859),
+                        color: colorScheme.onSurface,
                         fontFamily: 'Serif',
                       ),
                     ),
                     const SizedBox(height: 15),
-                    _buildTextField(_nameController, 'Customer name'),
+                    _buildTextField(_nameController, 'Customer name', colorScheme),
                     const SizedBox(height: 10),
-                    _buildTextField(_emailController, 'Email address'),
+                    _buildTextField(_emailController, 'Email address', colorScheme),
                     
                     const SizedBox(height: 30),
 
@@ -229,20 +262,20 @@ class _CreateInvoiceScreenState extends State<CreateInvoiceScreen> {
                     Row(
                       mainAxisAlignment: MainAxisAlignment.spaceBetween,
                       children: [
-                        const Text(
+                        Text(
                           'Items',
                           style: TextStyle(
                             fontSize: 18,
                             fontWeight: FontWeight.bold,
-                            color: Color(0xFF2A2859),
+                            color: colorScheme.onSurface,
                             fontFamily: 'Serif',
                           ),
                         ),
                         GestureDetector(
                           onTap: _addItem,
-                          child: const Text(
+                          child: Text(
                             'Add item',
-                            style: TextStyle(color: Color(0xFFE25E31), fontWeight: FontWeight.bold),
+                            style: TextStyle(color: colorScheme.secondary, fontWeight: FontWeight.bold),
                           ),
                         ),
                       ],
@@ -250,7 +283,35 @@ class _CreateInvoiceScreenState extends State<CreateInvoiceScreen> {
                     const SizedBox(height: 15),
                     
                     // Items List
-                    ..._items.map((item) => _buildItemTile(item)),
+                    if (_items.isEmpty)
+                      Center(
+                        child: Padding(
+                          padding: const EdgeInsets.symmetric(vertical: 20),
+                          child: Text(
+                            'No items added yet',
+                            style: TextStyle(color: colorScheme.onSurfaceVariant),
+                          ),
+                        ),
+                      )
+                    else
+                      ..._items.map((item) => _buildItemTile(item, colorScheme, isDark)),
+
+                    const SizedBox(height: 30),
+
+                    // Additional Info Section
+                    Text(
+                      'Additional Info',
+                      style: TextStyle(
+                        fontSize: 18,
+                        fontWeight: FontWeight.bold,
+                        color: colorScheme.onSurface,
+                        fontFamily: 'Serif',
+                      ),
+                    ),
+                    const SizedBox(height: 15),
+                    _buildTextField(_notesController, 'Notes (e.g., Thank you for your business)', colorScheme, maxLines: 3, required: false),
+                    const SizedBox(height: 10),
+                    _buildTextField(_paymentInstructionsController, 'Payment Instructions (e.g., Bank details)', colorScheme, maxLines: 3, required: false),
 
                     const SizedBox(height: 30),
 
@@ -258,16 +319,27 @@ class _CreateInvoiceScreenState extends State<CreateInvoiceScreen> {
                     Container(
                       padding: const EdgeInsets.all(25),
                       decoration: BoxDecoration(
-                        color: const Color(0xFF3D3B8E),
+                        gradient: LinearGradient(
+                          colors: [colorScheme.primary, colorScheme.primary.withOpacity(0.8)],
+                          begin: Alignment.topLeft,
+                          end: Alignment.bottomRight,
+                        ),
                         borderRadius: BorderRadius.circular(25),
+                        boxShadow: [
+                          BoxShadow(
+                            color: colorScheme.primary.withOpacity(0.3),
+                            blurRadius: 15,
+                            offset: const Offset(0, 8),
+                          ),
+                        ],
                       ),
                       child: Column(
                         children: [
                           _buildSummaryRow('Subtotal', settings.currencySymbol + subtotal.toStringAsFixed(2)),
-                          const SizedBox(height: 10),
+                          const SizedBox(height: 12),
                           _buildSummaryRow('Tax (${settings.defaultTaxRate.toStringAsFixed(0)}%)', settings.currencySymbol + taxAmount.toStringAsFixed(2)),
                           const SizedBox(height: 20),
-                          const Divider(color: Colors.white24),
+                          Divider(color: Colors.white.withOpacity(0.2)),
                           const SizedBox(height: 20),
                           Row(
                             mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -291,10 +363,17 @@ class _CreateInvoiceScreenState extends State<CreateInvoiceScreen> {
                     // Create Button
                     SizedBox(
                       width: double.infinity,
-                      height: 60,
+                      height: 65,
                       child: ElevatedButton(
                         onPressed: () {
-                          if (_formKey.currentState!.validate() && _items.isNotEmpty) {
+                          if (_formKey.currentState!.validate()) {
+                            if (_items.isEmpty) {
+                              ScaffoldMessenger.of(context).showSnackBar(
+                                const SnackBar(content: Text('Please add at least one item')),
+                              );
+                              return;
+                            }
+                            
                             final newInvoice = Invoice(
                               invoiceNumber: _generatedInvoiceNo,
                               customerName: _nameController.text,
@@ -303,6 +382,8 @@ class _CreateInvoiceScreenState extends State<CreateInvoiceScreen> {
                               dueDate: _dueDate,
                               items: List.from(_items),
                               taxRate: settings.defaultTaxRate,
+                              notes: _notesController.text,
+                              paymentInstructions: _paymentInstructionsController.text,
                             );
                             Provider.of<InvoiceProvider>(context, listen: false).addInvoice(newInvoice);
                             
@@ -317,12 +398,19 @@ class _CreateInvoiceScreenState extends State<CreateInvoiceScreen> {
                           }
                         },
                         style: ElevatedButton.styleFrom(
-                          backgroundColor: const Color(0xFFE25E31),
+                          backgroundColor: colorScheme.secondary,
                           foregroundColor: Colors.white,
                           shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(15)),
                           elevation: 0,
                         ),
-                        child: const Text('Create Invoice', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
+                        child: const Row(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            Icon(Icons.check_circle_outline),
+                            SizedBox(width: 10),
+                            Text('Generate Invoice', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
+                          ],
+                        ),
                       ),
                     ),
                     const SizedBox(height: 30),
@@ -336,97 +424,114 @@ class _CreateInvoiceScreenState extends State<CreateInvoiceScreen> {
     );
   }
 
-  Widget _buildTopInfoCard(String label, String value) {
+  Widget _buildTopInfoCard(String label, String value, ColorScheme colorScheme, bool isDark) {
     return Expanded(
       child: Container(
         padding: const EdgeInsets.symmetric(vertical: 15, horizontal: 10),
         decoration: BoxDecoration(
-          color: Colors.white,
+          color: colorScheme.surface,
           borderRadius: BorderRadius.circular(15),
+          border: isDark ? Border.all(color: Colors.white12) : null,
         ),
         child: Column(
           children: [
-            Text(label, style: const TextStyle(color: Color(0xFF6C699E), fontSize: 12)),
+            Text(label, style: TextStyle(color: colorScheme.onSurfaceVariant, fontSize: 12)),
             const SizedBox(height: 5),
-            Text(value, style: const TextStyle(color: Color(0xFF2A2859), fontWeight: FontWeight.bold, fontSize: 16)),
+            Text(value, style: TextStyle(color: colorScheme.onSurface, fontWeight: FontWeight.bold, fontSize: 16)),
           ],
         ),
       ),
     );
   }
 
-  Widget _buildTextField(TextEditingController controller, String hint) {
+  Widget _buildTextField(TextEditingController controller, String hint, ColorScheme colorScheme, {int maxLines = 1, bool required = true}) {
     return TextFormField(
       controller: controller,
+      maxLines: maxLines,
+      style: TextStyle(color: colorScheme.onSurface),
       decoration: InputDecoration(
         hintText: hint,
+        hintStyle: TextStyle(color: colorScheme.onSurfaceVariant),
         filled: true,
-        fillColor: Colors.white,
+        fillColor: colorScheme.surface,
         contentPadding: const EdgeInsets.symmetric(horizontal: 20, vertical: 15),
         border: OutlineInputBorder(
           borderRadius: BorderRadius.circular(15),
           borderSide: BorderSide.none,
         ),
       ),
-      validator: (val) => val!.isEmpty ? 'Required' : null,
+      validator: required ? (val) => val!.isEmpty ? 'Required' : null : null,
     );
   }
 
-  Widget _buildItemTile(InvoiceItem item) {
+  Widget _buildItemTile(InvoiceItem item, ColorScheme colorScheme, bool isDark) {
     return Container(
       margin: const EdgeInsets.only(bottom: 15),
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: colorScheme.surface,
         borderRadius: BorderRadius.circular(20),
+        border: isDark ? Border.all(color: Colors.white12) : null,
+        boxShadow: isDark ? null : [
+          BoxShadow(
+            color: Colors.black.withOpacity(0.03),
+            blurRadius: 10,
+            offset: const Offset(0, 4),
+          ),
+        ],
       ),
-      child: IntrinsicHeight(
+      child: Padding(
+        padding: const EdgeInsets.all(15),
         child: Row(
           children: [
             Container(
-              width: 6,
-              decoration: const BoxDecoration(
-                color: Color(0xFF3D3B8E),
-                borderRadius: BorderRadius.only(
-                  topLeft: Radius.circular(20),
-                  bottomLeft: Radius.circular(20),
-                ),
+              width: 50,
+              height: 50,
+              decoration: BoxDecoration(
+                color: colorScheme.primary.withOpacity(0.1),
+                borderRadius: BorderRadius.circular(12),
+              ),
+              child: Icon(Icons.inventory_2_outlined, color: colorScheme.primary),
+            ),
+            const SizedBox(width: 15),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    item.name,
+                    style: TextStyle(
+                      fontSize: 16,
+                      fontWeight: FontWeight.bold,
+                      color: colorScheme.onSurface,
+                    ),
+                  ),
+                  const SizedBox(height: 4),
+                  Text(
+                    '${item.quantity} x \$${item.unitPrice.toStringAsFixed(2)}',
+                    style: TextStyle(
+                      color: colorScheme.onSurfaceVariant,
+                      fontSize: 14,
+                    ),
+                  ),
+                ],
               ),
             ),
-            Expanded(
-              child: Padding(
-                padding: const EdgeInsets.all(20),
-                child: Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
-                    Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(
-                          item.name,
-                          style: const TextStyle(
-                              fontSize: 18,
-                              fontWeight: FontWeight.bold,
-                              color: Color(0xFF2A2859)),
-                        ),
-                        const SizedBox(height: 5),
-                        Text(
-                          'Qty ${item.quantity}  ·  \$${item.unitPrice.toStringAsFixed(2)}${item.discountPercent > 0 ? '  ·  ${item.discountPercent.toStringAsFixed(0)}% off' : ''}',
-                          style: const TextStyle(color: Color(0xFF6C699E)),
-                        ),
-                      ],
-                    ),
-                    IconButton(
-                      icon: const Icon(Icons.delete_outline,
-                          color: Color(0xFFE05275), size: 24),
-                      onPressed: () {
-                        setState(() {
-                          _items.remove(item);
-                        });
-                      },
-                    ),
-                  ],
-                ),
+            Text(
+              '\$${item.total.toStringAsFixed(2)}',
+              style: TextStyle(
+                fontSize: 16,
+                fontWeight: FontWeight.bold,
+                color: colorScheme.onSurface,
               ),
+            ),
+            const SizedBox(width: 10),
+            IconButton(
+              icon: Icon(Icons.remove_circle_outline, color: colorScheme.error.withOpacity(0.7)),
+              onPressed: () {
+                setState(() {
+                  _items.remove(item);
+                });
+              },
             ),
           ],
         ),

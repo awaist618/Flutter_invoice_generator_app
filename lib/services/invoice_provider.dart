@@ -1,4 +1,6 @@
+import 'dart:convert';
 import 'package:flutter/material.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import '../models/invoice_model.dart';
 import 'package:intl/intl.dart';
 
@@ -38,15 +40,30 @@ class InvoiceProvider with ChangeNotifier {
 
   double get revenueGrowth => 12.4; // Demo value
 
-  void addInvoice(Invoice invoice) {
+  Future<void> addInvoice(Invoice invoice) async {
     _invoices.add(invoice);
+    await _saveToLocal();
     notifyListeners();
   }
 
-  // Initializing with some dummy data that feels "real" for testing
-  void loadInvoices() {
-    if (_invoices.isEmpty) {
-      addInvoice(Invoice(
+  Future<void> _saveToLocal() async {
+    final prefs = await SharedPreferences.getInstance();
+    final data = jsonEncode(_invoices.map((e) => e.toJson()).toList());
+    await prefs.setString('invoices', data);
+  }
+
+  Future<void> loadInvoices() async {
+    final prefs = await SharedPreferences.getInstance();
+    final data = prefs.getString('invoices');
+    
+    if (data != null) {
+      final List decoded = jsonDecode(data);
+      _invoices.clear();
+      _invoices.addAll(decoded.map((e) => Invoice.fromJson(e)).toList());
+    } else {
+      // Initializing with some dummy data if nothing is saved
+      _invoices.clear();
+      _invoices.add(Invoice(
         invoiceNumber: 'INV-108',
         customerName: 'Maria Chen',
         customerEmail: 'maria@example.com',
@@ -55,7 +72,7 @@ class InvoiceProvider with ChangeNotifier {
         status: InvoiceStatus.paid,
         items: [InvoiceItem(name: 'Web Design', quantity: 1, unitPrice: 1240)],
       ));
-      addInvoice(Invoice(
+      _invoices.add(Invoice(
         invoiceNumber: 'INV-107',
         customerName: 'Daniel Osei',
         customerEmail: 'daniel@example.com',
@@ -64,7 +81,7 @@ class InvoiceProvider with ChangeNotifier {
         status: InvoiceStatus.overdue,
         items: [InvoiceItem(name: 'App Audit', quantity: 2, unitPrice: 430)],
       ));
-      addInvoice(Invoice(
+      _invoices.add(Invoice(
         invoiceNumber: 'INV-106',
         customerName: 'Priya Nair',
         customerEmail: 'priya@example.com',
@@ -73,6 +90,8 @@ class InvoiceProvider with ChangeNotifier {
         status: InvoiceStatus.unpaid,
         items: [InvoiceItem(name: 'Social Media Management', quantity: 1, unitPrice: 2015)],
       ));
+      await _saveToLocal();
     }
+    notifyListeners();
   }
 }

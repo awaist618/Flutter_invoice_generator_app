@@ -5,6 +5,7 @@ import '../models/invoice_model.dart';
 import '../services/settings_provider.dart';
 import 'package:intl/intl.dart';
 import 'create_invoice_screen.dart';
+import 'invoice_detail_screen.dart';
 
 class InvoicesListScreen extends StatefulWidget {
   const InvoicesListScreen({super.key});
@@ -20,6 +21,9 @@ class _InvoicesListScreenState extends State<InvoicesListScreen> {
   @override
   Widget build(BuildContext context) {
     final provider = Provider.of<InvoiceProvider>(context);
+    final theme = Theme.of(context);
+    final colorScheme = theme.colorScheme;
+    final isDark = theme.brightness == Brightness.dark;
     
     // Filter logic
     final filteredInvoices = provider.invoices.where((inv) {
@@ -34,7 +38,7 @@ class _InvoicesListScreenState extends State<InvoicesListScreen> {
     }).toList();
 
     return Scaffold(
-      backgroundColor: const Color(0xFFF3F2FF),
+      backgroundColor: theme.scaffoldBackgroundColor,
       body: Stack(
         children: [
           // Background shapes
@@ -44,8 +48,8 @@ class _InvoicesListScreenState extends State<InvoicesListScreen> {
             child: Container(
               width: 150,
               height: 150,
-              decoration: const BoxDecoration(
-                color: Color(0xFFFF9F69),
+              decoration: BoxDecoration(
+                color: const Color(0xFFFF9F69).withOpacity(isDark ? 0.3 : 1.0),
                 shape: BoxShape.circle,
               ),
             ),
@@ -63,14 +67,14 @@ class _InvoicesListScreenState extends State<InvoicesListScreen> {
                         padding: EdgeInsets.zero,
                         alignment: Alignment.centerLeft,
                         onPressed: () => Navigator.pop(context),
-                        icon: const Icon(Icons.arrow_back, color: Color(0xFF2A2859), size: 30),
+                        icon: Icon(Icons.arrow_back, color: colorScheme.onSurface, size: 30),
                       ),
-                      const Text(
+                      Text(
                         'Invoices',
                         style: TextStyle(
                           fontSize: 32,
                           fontWeight: FontWeight.bold,
-                          color: Color(0xFF2A2859),
+                          color: colorScheme.onSurface,
                           fontFamily: 'Serif',
                         ),
                       ),
@@ -82,15 +86,17 @@ class _InvoicesListScreenState extends State<InvoicesListScreen> {
                   Container(
                     padding: const EdgeInsets.symmetric(horizontal: 20),
                     decoration: BoxDecoration(
-                      color: Colors.white,
+                      color: colorScheme.surface,
                       borderRadius: BorderRadius.circular(15),
+                      border: isDark ? Border.all(color: Colors.white12) : null,
                     ),
                     child: TextField(
                       onChanged: (value) => setState(() => _searchQuery = value),
-                      decoration: const InputDecoration(
+                      style: TextStyle(color: colorScheme.onSurface),
+                      decoration: InputDecoration(
                         border: InputBorder.none,
                         hintText: 'Search by number or customer',
-                        hintStyle: TextStyle(color: Colors.grey),
+                        hintStyle: TextStyle(color: colorScheme.onSurfaceVariant),
                       ),
                     ),
                   ),
@@ -110,16 +116,16 @@ class _InvoicesListScreenState extends State<InvoicesListScreen> {
                             onSelected: (selected) {
                               if (selected) setState(() => _selectedFilter = filter);
                             },
-                            selectedColor: const Color(0xFF3D3B8E),
+                            selectedColor: colorScheme.primary,
                             labelStyle: TextStyle(
-                              color: isSelected ? Colors.white : const Color(0xFF2A2859),
+                              color: isSelected ? Colors.white : colorScheme.onSurface,
                               fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
                             ),
-                            backgroundColor: Colors.white,
+                            backgroundColor: colorScheme.surface,
                             shape: RoundedRectangleBorder(
                               borderRadius: BorderRadius.circular(20),
                             ),
-                            side: BorderSide.none,
+                            side: isDark ? const BorderSide(color: Colors.white12) : BorderSide.none,
                             showCheckmark: false,
                           ),
                         );
@@ -130,13 +136,15 @@ class _InvoicesListScreenState extends State<InvoicesListScreen> {
                   
                   // Invoices List
                   Expanded(
-                    child: ListView.builder(
-                      itemCount: filteredInvoices.length,
-                      itemBuilder: (context, index) {
-                        final inv = filteredInvoices[index];
-                        return _buildInvoiceTile(inv);
-                      },
-                    ),
+                    child: filteredInvoices.isEmpty
+                        ? _buildEmptyState(colorScheme, isDark)
+                        : ListView.builder(
+                            itemCount: filteredInvoices.length,
+                            itemBuilder: (context, index) {
+                              final inv = filteredInvoices[index];
+                              return _buildInvoiceTile(inv, colorScheme, isDark);
+                            },
+                          ),
                   ),
                 ],
               ),
@@ -148,11 +156,11 @@ class _InvoicesListScreenState extends State<InvoicesListScreen> {
         height: 65,
         width: 65,
         decoration: BoxDecoration(
-          color: const Color(0xFFE25E31),
+          color: colorScheme.secondary,
           shape: BoxShape.circle,
           boxShadow: [
             BoxShadow(
-              color: const Color(0xFFE25E31).withAlpha(77),
+              color: colorScheme.secondary.withAlpha(77),
               blurRadius: 10,
               offset: const Offset(0, 5),
             ),
@@ -175,7 +183,39 @@ class _InvoicesListScreenState extends State<InvoicesListScreen> {
     );
   }
 
-  Widget _buildInvoiceTile(Invoice inv) {
+  Widget _buildEmptyState(ColorScheme colorScheme, bool isDark) {
+    return Center(
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          Icon(
+            _searchQuery.isNotEmpty ? Icons.search_off : Icons.description_outlined,
+            size: 80,
+            color: colorScheme.onSurfaceVariant.withOpacity(0.3),
+          ),
+          const SizedBox(height: 20),
+          Text(
+            _searchQuery.isNotEmpty ? 'No matching invoices' : 'No invoices yet',
+            style: TextStyle(
+              fontSize: 20,
+              fontWeight: FontWeight.bold,
+              color: colorScheme.onSurface,
+            ),
+          ),
+          const SizedBox(height: 10),
+          Text(
+            _searchQuery.isNotEmpty 
+              ? 'Try adjusting your search or filters'
+              : 'Create your first invoice to see it here',
+            style: TextStyle(color: colorScheme.onSurfaceVariant),
+            textAlign: TextAlign.center,
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildInvoiceTile(Invoice inv, ColorScheme colorScheme, bool isDark) {
     Color statusColor;
     String statusLabel;
     
@@ -194,84 +234,92 @@ class _InvoicesListScreenState extends State<InvoicesListScreen> {
         break;
     }
 
-    return Container(
-      margin: const EdgeInsets.only(bottom: 15),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(20),
-      ),
-      child: IntrinsicHeight(
+    return GestureDetector(
+      onTap: () {
+        Navigator.push(
+          context,
+          MaterialPageRoute(
+            builder: (context) => InvoiceDetailScreen(invoice: inv),
+          ),
+        );
+      },
+      child: Container(
+        margin: const EdgeInsets.only(bottom: 15),
+        padding: const EdgeInsets.all(15),
+        decoration: BoxDecoration(
+          color: colorScheme.surface,
+          borderRadius: BorderRadius.circular(20),
+          border: isDark ? Border.all(color: Colors.white12) : null,
+          boxShadow: isDark ? null : [
+            BoxShadow(
+              color: Colors.black.withOpacity(0.02),
+              blurRadius: 10,
+              offset: const Offset(0, 4),
+            ),
+          ],
+        ),
         child: Row(
           children: [
-            // Left color stripe
             Container(
-              width: 6,
+              width: 50,
+              height: 50,
               decoration: BoxDecoration(
-                color: statusColor,
-                borderRadius: const BorderRadius.only(
-                  topLeft: Radius.circular(20),
-                  bottomLeft: Radius.circular(20),
-                ),
+                color: statusColor.withOpacity(0.1),
+                borderRadius: BorderRadius.circular(15),
+              ),
+              child: Icon(Icons.receipt_long_outlined, color: statusColor),
+            ),
+            const SizedBox(width: 15),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    inv.customerName,
+                    style: TextStyle(
+                      fontWeight: FontWeight.bold,
+                      fontSize: 16,
+                      color: colorScheme.onSurface,
+                    ),
+                  ),
+                  Text(
+                    '${inv.invoiceNumber} · ${DateFormat('MMM dd').format(inv.date)}',
+                    style: TextStyle(
+                      color: colorScheme.onSurfaceVariant,
+                      fontSize: 13,
+                    ),
+                  ),
+                ],
               ),
             ),
-            Expanded(
-              child: Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 15),
-                child: Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
-                    Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(
-                          inv.invoiceNumber,
-                          style: const TextStyle(
-                            fontWeight: FontWeight.bold,
-                            fontSize: 18,
-                            color: Color(0xFF2A2859),
-                          ),
-                        ),
-                        Text(
-                          '${inv.customerName} · ${DateFormat('MMM dd').format(inv.date)}',
-                          style: const TextStyle(
-                            color: Color(0xFF6C699E),
-                            fontSize: 14,
-                          ),
-                        ),
-                      ],
-                    ),
-                    Column(
-                      crossAxisAlignment: CrossAxisAlignment.end,
-                      children: [
-                        Text(
-                          Provider.of<SettingsProvider>(context, listen: false).currencySymbol + NumberFormat("#,##0", "en_US").format(inv.total),
-                          style: const TextStyle(
-                            fontWeight: FontWeight.bold,
-                            fontSize: 18,
-                            color: Color(0xFF2A2859),
-                          ),
-                        ),
-                        const SizedBox(height: 5),
-                        Container(
-                          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
-                          decoration: BoxDecoration(
-                            color: statusColor.withAlpha(25),
-                            borderRadius: BorderRadius.circular(10),
-                          ),
-                          child: Text(
-                            statusLabel,
-                            style: TextStyle(
-                              color: statusColor,
-                              fontSize: 12,
-                              fontWeight: FontWeight.bold,
-                            ),
-                          ),
-                        ),
-                      ],
-                    ),
-                  ],
+            Column(
+              crossAxisAlignment: CrossAxisAlignment.end,
+              children: [
+                Text(
+                  Provider.of<SettingsProvider>(context, listen: false).currencySymbol + NumberFormat("#,##0", "en_US").format(inv.total),
+                  style: TextStyle(
+                    fontWeight: FontWeight.bold,
+                    fontSize: 16,
+                    color: colorScheme.onSurface,
+                  ),
                 ),
-              ),
+                const SizedBox(height: 5),
+                Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                  decoration: BoxDecoration(
+                    color: statusColor.withOpacity(0.15),
+                    borderRadius: BorderRadius.circular(8),
+                  ),
+                  child: Text(
+                    statusLabel,
+                    style: TextStyle(
+                      color: statusColor,
+                      fontSize: 10,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                ),
+              ],
             ),
           ],
         ),

@@ -19,10 +19,13 @@ class _ReportsScreenState extends State<ReportsScreen> {
   Widget build(BuildContext context) {
     final invoiceProvider = Provider.of<InvoiceProvider>(context);
     final settings = Provider.of<SettingsProvider>(context);
+    final theme = Theme.of(context);
+    final colorScheme = theme.colorScheme;
+    final isDark = theme.brightness == Brightness.dark;
     final monthlyData = invoiceProvider.monthlyRevenue;
     
     return Scaffold(
-      backgroundColor: const Color(0xFFF3F2FF),
+      backgroundColor: theme.scaffoldBackgroundColor,
       body: Stack(
         children: [
           // Background Decoration
@@ -32,16 +35,16 @@ class _ReportsScreenState extends State<ReportsScreen> {
             child: Container(
               width: 180,
               height: 180,
-              decoration: const BoxDecoration(
-                color: Color(0xFF66D1A4),
+              decoration: BoxDecoration(
+                color: const Color(0xFF66D1A4).withOpacity(isDark ? 0.3 : 1.0),
                 shape: BoxShape.circle,
               ),
               child: Center(
                 child: Container(
                   width: 60,
                   height: 60,
-                  decoration: const BoxDecoration(
-                    color: Color(0xFF126E51),
+                  decoration: BoxDecoration(
+                    color: const Color(0xFF126E51).withOpacity(isDark ? 0.5 : 1.0),
                     shape: BoxShape.circle,
                   ),
                 ),
@@ -59,22 +62,22 @@ class _ReportsScreenState extends State<ReportsScreen> {
                     padding: EdgeInsets.zero,
                     alignment: Alignment.centerLeft,
                     onPressed: () => Navigator.pop(context),
-                    icon: const Icon(Icons.arrow_back,
-                        color: Color(0xFF2A2859), size: 30),
+                    icon: Icon(Icons.arrow_back,
+                        color: colorScheme.onSurface, size: 30),
                   ),
                   const SizedBox(height: 10),
-                  const Text(
+                  Text(
                     'Reports',
                     style: TextStyle(
                       fontSize: 32,
                       fontWeight: FontWeight.bold,
-                      color: Color(0xFF2A2859),
+                      color: colorScheme.onSurface,
                       fontFamily: 'Serif',
                     ),
                   ),
-                  const Text(
+                  Text(
                     'Your income at a glance',
-                    style: TextStyle(fontSize: 16, color: Color(0xFF6C699E)),
+                    style: TextStyle(fontSize: 16, color: colorScheme.onSurfaceVariant),
                   ),
                   const SizedBox(height: 30),
 
@@ -90,13 +93,13 @@ class _ReportsScreenState extends State<ReportsScreen> {
                           onSelected: (selected) {
                             if (selected) setState(() => _selectedPeriod = period);
                           },
-                          selectedColor: const Color(0xFF3D3B8E),
+                          selectedColor: colorScheme.primary,
                           labelStyle: TextStyle(
-                            color: isSelected ? Colors.white : const Color(0xFF2A2859),
+                            color: isSelected ? Colors.white : colorScheme.onSurface,
                           ),
-                          backgroundColor: Colors.white,
+                          backgroundColor: colorScheme.surface,
                           shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
-                          side: BorderSide.none,
+                          side: isDark ? const BorderSide(color: Colors.white12) : BorderSide.none,
                           showCheckmark: false,
                         ),
                       );
@@ -109,7 +112,7 @@ class _ReportsScreenState extends State<ReportsScreen> {
                     width: double.infinity,
                     padding: const EdgeInsets.all(25),
                     decoration: BoxDecoration(
-                      color: const Color(0xFF3D3B8E),
+                      color: colorScheme.primary,
                       borderRadius: BorderRadius.circular(25),
                     ),
                     child: Column(
@@ -154,7 +157,7 @@ class _ReportsScreenState extends State<ReportsScreen> {
                                   if (index < 0 || index >= monthlyData.keys.length) return const Text('');
                                   return Padding(
                                     padding: const EdgeInsets.only(top: 8.0),
-                                    child: Text(monthlyData.keys.elementAt(index), style: const TextStyle(color: Colors.grey, fontSize: 12)),
+                                    child: Text(monthlyData.keys.elementAt(index), style: TextStyle(color: colorScheme.onSurfaceVariant, fontSize: 12)),
                                   );
                                 },
                               ),
@@ -173,7 +176,7 @@ class _ReportsScreenState extends State<ReportsScreen> {
                               barRods: [
                                 BarChartRodData(
                                   toY: val == 0 ? 5 : val, // Minimum visual bar
-                                  color: isCurrentMonth ? const Color(0xFFE25E31) : const Color(0xFFB4B0FF).withAlpha(150),
+                                  color: isCurrentMonth ? colorScheme.secondary : colorScheme.primary.withAlpha(150),
                                   width: 35,
                                   borderRadius: BorderRadius.circular(8),
                                 ),
@@ -183,6 +186,8 @@ class _ReportsScreenState extends State<ReportsScreen> {
                         ),
                       ),
                     ),
+                    colorScheme,
+                    isDark,
                   ),
                   const SizedBox(height: 30),
 
@@ -203,7 +208,7 @@ class _ReportsScreenState extends State<ReportsScreen> {
                                   if (index < 0 || index >= monthlyData.keys.length) return const Text('');
                                   return Padding(
                                     padding: const EdgeInsets.only(top: 8.0),
-                                    child: Text(monthlyData.keys.elementAt(index), style: const TextStyle(color: Colors.grey, fontSize: 12)),
+                                    child: Text(monthlyData.keys.elementAt(index), style: TextStyle(color: colorScheme.onSurfaceVariant, fontSize: 12)),
                                   );
                                 },
                               ),
@@ -237,6 +242,8 @@ class _ReportsScreenState extends State<ReportsScreen> {
                         ),
                       ),
                     ),
+                    colorScheme,
+                    isDark,
                     badge: '+12.4%',
                   ),
                   const SizedBox(height: 30),
@@ -261,7 +268,7 @@ class _ReportsScreenState extends State<ReportsScreen> {
                                   radius: 15,
                                 ),
                                 PieChartSectionData(
-                                  color: const Color(0xFFE25E31),
+                                  color: colorScheme.secondary,
                                   value: invoiceProvider.unpaidCount.toDouble(),
                                   title: '',
                                   radius: 15,
@@ -274,13 +281,15 @@ class _ReportsScreenState extends State<ReportsScreen> {
                         Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
-                            _buildLegendItem(const Color(0xFF126E51), 'Paid', invoiceProvider.totalInvoicesCount > 0 ? (invoiceProvider.paidCount / invoiceProvider.totalInvoicesCount * 100).toInt() : 0),
+                            _buildLegendItem(const Color(0xFF126E51), 'Paid', invoiceProvider.totalInvoicesCount > 0 ? (invoiceProvider.paidCount / invoiceProvider.totalInvoicesCount * 100).toInt() : 0, colorScheme),
                             const SizedBox(height: 10),
-                            _buildLegendItem(const Color(0xFFE25E31), 'Unpaid', invoiceProvider.totalInvoicesCount > 0 ? (invoiceProvider.unpaidCount / invoiceProvider.totalInvoicesCount * 100).toInt() : 0),
+                            _buildLegendItem(colorScheme.secondary, 'Unpaid', invoiceProvider.totalInvoicesCount > 0 ? (invoiceProvider.unpaidCount / invoiceProvider.totalInvoicesCount * 100).toInt() : 0, colorScheme),
                           ],
                         ),
                       ],
                     ),
+                    colorScheme,
+                    isDark,
                   ),
                   const SizedBox(height: 50),
                 ],
@@ -292,13 +301,14 @@ class _ReportsScreenState extends State<ReportsScreen> {
     );
   }
 
-  Widget _buildChartCard(String title, Widget chart, {String? badge}) {
+  Widget _buildChartCard(String title, Widget chart, ColorScheme colorScheme, bool isDark, {String? badge}) {
     return Container(
       width: double.infinity,
       padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: colorScheme.surface,
         borderRadius: BorderRadius.circular(25),
+        border: isDark ? Border.all(color: Colors.white12) : null,
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -308,7 +318,7 @@ class _ReportsScreenState extends State<ReportsScreen> {
             children: [
               Text(
                 title,
-                style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: Color(0xFF2A2859)),
+                style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: colorScheme.onSurface),
               ),
               if (badge != null)
                 Container(
@@ -328,12 +338,12 @@ class _ReportsScreenState extends State<ReportsScreen> {
     );
   }
 
-  Widget _buildLegendItem(Color color, String label, int percent) {
+  Widget _buildLegendItem(Color color, String label, int percent, ColorScheme colorScheme) {
     return Row(
       children: [
         Container(width: 12, height: 12, decoration: BoxDecoration(color: color, shape: BoxShape.circle)),
         const SizedBox(width: 10),
-        Text('$label · $percent%', style: const TextStyle(color: Color(0xFF2A2859), fontSize: 14)),
+        Text('$label · $percent%', style: TextStyle(color: colorScheme.onSurface, fontSize: 14)),
       ],
     );
   }

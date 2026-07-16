@@ -17,6 +17,8 @@ class _CreateInvoiceScreenState extends State<CreateInvoiceScreen> {
   final _formKey = GlobalKey<FormState>();
   final _nameController = TextEditingController();
   final _emailController = TextEditingController();
+  final _addressController = TextEditingController();
+  final _phoneController = TextEditingController();
   final _notesController = TextEditingController();
   final _paymentInstructionsController = TextEditingController();
   
@@ -254,7 +256,11 @@ class _CreateInvoiceScreenState extends State<CreateInvoiceScreen> {
                     const SizedBox(height: 15),
                     _buildTextField(_nameController, 'Customer name', colorScheme),
                     const SizedBox(height: 10),
+                    _buildTextField(_addressController, 'Customer address', colorScheme),
+                    const SizedBox(height: 10),
                     _buildTextField(_emailController, 'Email address', colorScheme),
+                    const SizedBox(height: 10),
+                    _buildTextField(_phoneController, 'Phone number', colorScheme),
                     
                     const SizedBox(height: 30),
 
@@ -378,6 +384,8 @@ class _CreateInvoiceScreenState extends State<CreateInvoiceScreen> {
                               invoiceNumber: _generatedInvoiceNo,
                               customerName: _nameController.text,
                               customerEmail: _emailController.text,
+                              customerAddress: _addressController.text,
+                              customerPhone: _phoneController.text,
                               date: _invoiceDate,
                               dueDate: _dueDate,
                               items: List.from(_items),

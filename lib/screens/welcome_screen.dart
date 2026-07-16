@@ -67,11 +67,10 @@ class WelcomeScreen extends StatelessWidget {
                       decoration: BoxDecoration(
                         color: colorScheme.primary,
                         borderRadius: BorderRadius.circular(35),
-                      ),
-                      child: const Icon(
-                        Icons.description_rounded,
-                        color: Colors.white,
-                        size: 80,
+                        image: const DecorationImage(
+                          image: AssetImage('lib/assets/icon.png'),
+                          fit: BoxFit.cover,
+                        ),
                       ),
                     ),
                     const SizedBox(height: 40),

@@ -88,11 +88,10 @@ class _LoginScreenState extends State<LoginScreen> {
                         decoration: BoxDecoration(
                           color: colorScheme.primary,
                           borderRadius: BorderRadius.circular(25),
-                        ),
-                        child: const Icon(
-                          Icons.description_rounded,
-                          color: Colors.white,
-                          size: 50,
+                          image: const DecorationImage(
+                            image: AssetImage('lib/assets/icon.png'),
+                            fit: BoxFit.cover,
+                          ),
                         ),
                       ),
                     ),

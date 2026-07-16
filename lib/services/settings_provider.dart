@@ -4,6 +4,7 @@ class SettingsProvider with ChangeNotifier {
   String _companyName = 'Acme Studio';
   String _companyEmail = 'hello@acmestudio.com';
   String _companyAddress = '42 Market St, Austin, TX';
+  String _companyPhone = '+1 (512) 555-0123';
   String _currency = r'USD ($)';
   double _defaultTaxRate = 8.0;
   String _invoicePrefix = 'INV-';
@@ -14,6 +15,7 @@ class SettingsProvider with ChangeNotifier {
   String get companyName => _companyName;
   String get companyEmail => _companyEmail;
   String get companyAddress => _companyAddress;
+  String get companyPhone => _companyPhone;
   String get currency => _currency;
   
   String get currencySymbol {
@@ -35,6 +37,16 @@ class SettingsProvider with ChangeNotifier {
 
   void updateCompanyEmail(String email) {
     _companyEmail = email;
+    notifyListeners();
+  }
+
+  void updateCompanyAddress(String address) {
+    _companyAddress = address;
+    notifyListeners();
+  }
+
+  void updateCompanyPhone(String phone) {
+    _companyPhone = phone;
     notifyListeners();
   }
 

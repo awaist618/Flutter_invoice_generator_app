@@ -46,6 +46,30 @@ class InvoiceProvider with ChangeNotifier {
     notifyListeners();
   }
 
+  Future<void> updateInvoiceStatus(String id, InvoiceStatus newStatus) async {
+    final index = _invoices.indexWhere((inv) => inv.id == id);
+    if (index != -1) {
+      final oldInvoice = _invoices[index];
+      _invoices[index] = Invoice(
+        id: oldInvoice.id,
+        invoiceNumber: oldInvoice.invoiceNumber,
+        customerName: oldInvoice.customerName,
+        customerEmail: oldInvoice.customerEmail,
+        customerAddress: oldInvoice.customerAddress,
+        customerPhone: oldInvoice.customerPhone,
+        date: oldInvoice.date,
+        dueDate: oldInvoice.dueDate,
+        items: oldInvoice.items,
+        taxRate: oldInvoice.taxRate,
+        status: newStatus,
+        notes: oldInvoice.notes,
+        paymentInstructions: oldInvoice.paymentInstructions,
+      );
+      await _saveToLocal();
+      notifyListeners();
+    }
+  }
+
   Future<void> _saveToLocal() async {
     final prefs = await SharedPreferences.getInstance();
     final data = jsonEncode(_invoices.map((e) => e.toJson()).toList());
@@ -67,6 +91,8 @@ class InvoiceProvider with ChangeNotifier {
         invoiceNumber: 'INV-108',
         customerName: 'Maria Chen',
         customerEmail: 'maria@example.com',
+        customerAddress: '18 Willow Ave, Denver, CO 80203',
+        customerPhone: '+1 (303) 555-0199',
         date: DateTime.now().subtract(const Duration(days: 2)),
         dueDate: DateTime.now().add(const Duration(days: 5)),
         status: InvoiceStatus.paid,
@@ -76,6 +102,8 @@ class InvoiceProvider with ChangeNotifier {
         invoiceNumber: 'INV-107',
         customerName: 'Daniel Osei',
         customerEmail: 'daniel@example.com',
+        customerAddress: '55 East St, Houston, TX 77002',
+        customerPhone: '+1 (713) 555-0144',
         date: DateTime.now().subtract(const Duration(days: 10)),
         dueDate: DateTime.now().subtract(const Duration(days: 1)),
         status: InvoiceStatus.overdue,
@@ -85,6 +113,8 @@ class InvoiceProvider with ChangeNotifier {
         invoiceNumber: 'INV-106',
         customerName: 'Priya Nair',
         customerEmail: 'priya@example.com',
+        customerAddress: '99 North Rd, Seattle, WA 98101',
+        customerPhone: '+1 (206) 555-0122',
         date: DateTime.now().subtract(const Duration(days: 1)),
         dueDate: DateTime.now().add(const Duration(days: 1)), // Due tomorrow!
         status: InvoiceStatus.unpaid,

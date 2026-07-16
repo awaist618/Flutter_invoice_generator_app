@@ -50,7 +50,8 @@ class PdfService {
                         crossAxisAlignment: pw.CrossAxisAlignment.start,
                         children: [
                           pw.Text(settings.companyName, style: pw.TextStyle(font: fontBold, fontSize: 18, color: PdfColor.fromInt(0xFF2A2859))),
-                          pw.Text(settings.companyAddress, style: pw.TextStyle(font: font, fontSize: 11, color: PdfColors.grey700)),
+                          pw.Text(settings.companyAddress, style: pw.TextStyle(font: font, fontSize: 10, color: PdfColors.grey700)),
+                          pw.Text('${settings.companyEmail}  ·  ${settings.companyPhone}', style: pw.TextStyle(font: font, fontSize: 10, color: PdfColors.grey700)),
                         ],
                       ),
                     ],
@@ -79,8 +80,8 @@ class PdfService {
                       pw.Text('BILLED TO', style: pw.TextStyle(font: fontBold, fontSize: 10, color: PdfColor.fromInt(0xFFB4B0FF))),
                       pw.SizedBox(height: 5),
                       pw.Text(invoice.customerName, style: pw.TextStyle(font: fontBold, fontSize: 14)),
-                      pw.Text(invoice.customerAddress, style: pw.TextStyle(font: font, fontSize: 11, color: PdfColors.grey700)),
-                      pw.Text(invoice.customerEmail, style: pw.TextStyle(font: font, fontSize: 11, color: PdfColors.grey700)),
+                      pw.Text(invoice.customerAddress, style: pw.TextStyle(font: font, fontSize: 10, color: PdfColors.grey700)),
+                      pw.Text('${invoice.customerEmail}  ·  ${invoice.customerPhone}', style: pw.TextStyle(font: font, fontSize: 10, color: PdfColors.grey700)),
                     ],
                   ),
                   pw.Column(

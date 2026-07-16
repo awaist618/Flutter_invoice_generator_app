@@ -127,6 +127,15 @@ class SettingsScreen extends StatelessWidget {
                     onChanged: (val) => settings.updateCompanyName(val),
                     colorScheme: colorScheme,
                     isDark: isDark,
+                    hint: 'Company Name',
+                  ),
+                  const SizedBox(height: 10),
+                  _buildTextField(
+                    initialValue: settings.companyAddress,
+                    onChanged: (val) => settings.updateCompanyAddress(val),
+                    colorScheme: colorScheme,
+                    isDark: isDark,
+                    hint: 'Company Address',
                   ),
                   const SizedBox(height: 10),
                   _buildTextField(
@@ -134,6 +143,15 @@ class SettingsScreen extends StatelessWidget {
                     onChanged: (val) => settings.updateCompanyEmail(val),
                     colorScheme: colorScheme,
                     isDark: isDark,
+                    hint: 'Company Email',
+                  ),
+                  const SizedBox(height: 10),
+                  _buildTextField(
+                    initialValue: settings.companyPhone,
+                    onChanged: (val) => settings.updateCompanyPhone(val),
+                    colorScheme: colorScheme,
+                    isDark: isDark,
+                    hint: 'Company Phone',
                   ),
                   const SizedBox(height: 30),
 
@@ -240,6 +258,7 @@ class SettingsScreen extends StatelessWidget {
     required Function(String) onChanged,
     required ColorScheme colorScheme,
     required bool isDark,
+    String? hint,
   }) {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 20),
@@ -251,8 +270,10 @@ class SettingsScreen extends StatelessWidget {
       child: TextFormField(
         initialValue: initialValue,
         onChanged: onChanged,
-        decoration: const InputDecoration(
+        decoration: InputDecoration(
           border: InputBorder.none,
+          hintText: hint,
+          hintStyle: TextStyle(color: colorScheme.onSurfaceVariant.withOpacity(0.5)),
         ),
         style: TextStyle(color: colorScheme.onSurface, fontSize: 18),
       ),

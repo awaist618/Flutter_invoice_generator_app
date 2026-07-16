@@ -3,18 +3,24 @@ import '../models/invoice_model.dart';
 import 'package:intl/intl.dart';
 import 'package:provider/provider.dart';
 import '../services/settings_provider.dart';
+import '../services/invoice_provider.dart';
 import '../services/pdf_service.dart';
 
 class InvoiceDetailScreen extends StatelessWidget {
-  final Invoice invoice;
+  final String invoiceId;
 
-  const InvoiceDetailScreen({super.key, required this.invoice});
+  const InvoiceDetailScreen({super.key, required this.invoiceId});
 
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final colorScheme = theme.colorScheme;
     final settings = Provider.of<SettingsProvider>(context);
+    final invoiceProvider = Provider.of<InvoiceProvider>(context);
+    
+    // Find the invoice in the provider to get the latest status
+    final invoice = invoiceProvider.invoices.firstWhere((inv) => inv.id == invoiceId);
+
     final isDark = theme.brightness == Brightness.dark;
 
     return Scaffold(
@@ -98,9 +104,23 @@ class InvoiceDetailScreen extends StatelessWidget {
                                     fontSize: 14,
                                   ),
                                 ),
+                                Text(
+                                  '${settings.companyEmail}  ·  ${settings.companyPhone}',
+                                  style: TextStyle(
+                                    color: colorScheme.onSurfaceVariant,
+                                    fontSize: 12,
+                                  ),
+                                ),
                               ],
                             ),
-                            _buildStatusBadge(invoice.status),
+                            GestureDetector(
+                              onTap: () {
+                                if (invoice.status != InvoiceStatus.paid) {
+                                  _showStatusDialog(context, invoice);
+                                }
+                              },
+                              child: _buildStatusBadge(invoice.status),
+                            ),
                           ],
                         ),
                         const SizedBox(height: 30),
@@ -124,6 +144,14 @@ class InvoiceDetailScreen extends StatelessWidget {
                                     fontWeight: FontWeight.bold,
                                     color: colorScheme.onSurface,
                                   ),
+                                ),
+                                Text(
+                                  invoice.customerAddress,
+                                  style: TextStyle(color: colorScheme.onSurfaceVariant, fontSize: 12),
+                                ),
+                                Text(
+                                  '${invoice.customerEmail}  ·  ${invoice.customerPhone}',
+                                  style: TextStyle(color: colorScheme.onSurfaceVariant, fontSize: 12),
                                 ),
                               ],
                             ),
@@ -341,6 +369,42 @@ class InvoiceDetailScreen extends StatelessWidget {
           label,
           style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
         ),
+      ),
+    );
+  }
+
+  void _showStatusDialog(BuildContext context, Invoice invoice) {
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('Update Status'),
+        content: const Text('Mark this invoice as:'),
+        actions: [
+          TextButton(
+            onPressed: () {
+              Provider.of<InvoiceProvider>(context, listen: false)
+                  .updateInvoiceStatus(invoice.id, InvoiceStatus.paid);
+              Navigator.pop(context);
+            },
+            child: const Text('Paid', style: TextStyle(color: Color(0xFF66D1A4))),
+          ),
+          TextButton(
+            onPressed: () {
+              Provider.of<InvoiceProvider>(context, listen: false)
+                  .updateInvoiceStatus(invoice.id, InvoiceStatus.unpaid);
+              Navigator.pop(context);
+            },
+            child: const Text('Unpaid', style: TextStyle(color: Color(0xFFFF9F69))),
+          ),
+          TextButton(
+            onPressed: () {
+              Provider.of<InvoiceProvider>(context, listen: false)
+                  .updateInvoiceStatus(invoice.id, InvoiceStatus.overdue);
+              Navigator.pop(context);
+            },
+            child: const Text('Overdue', style: TextStyle(color: Color(0xFFE05275))),
+          ),
+        ],
       ),
     );
   }

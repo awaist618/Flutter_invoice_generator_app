@@ -239,7 +239,7 @@ class _InvoicesListScreenState extends State<InvoicesListScreen> {
         Navigator.push(
           context,
           MaterialPageRoute(
-            builder: (context) => InvoiceDetailScreen(invoice: inv),
+            builder: (context) => InvoiceDetailScreen(invoiceId: inv.id),
           ),
         );
       },

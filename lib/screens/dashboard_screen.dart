@@ -394,7 +394,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
         Navigator.push(
           context,
           MaterialPageRoute(
-            builder: (context) => InvoiceDetailScreen(invoice: inv),
+            builder: (context) => InvoiceDetailScreen(invoiceId: inv.id),
           ),
         );
       },

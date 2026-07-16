@@ -39,6 +39,7 @@ class Invoice {
   final String customerName;
   final String customerEmail;
   final String customerAddress;
+  final String customerPhone;
   final DateTime date;
   final DateTime dueDate;
   final List<InvoiceItem> items;
@@ -53,6 +54,7 @@ class Invoice {
     required this.customerName,
     required this.customerEmail,
     this.customerAddress = '18 Willow Ave, Denver, CO 80203',
+    this.customerPhone = '+1 (303) 555-0199',
     required this.date,
     required this.dueDate,
     required this.items,
@@ -72,6 +74,7 @@ class Invoice {
     'customerName': customerName,
     'customerEmail': customerEmail,
     'customerAddress': customerAddress,
+    'customerPhone': customerPhone,
     'date': date.toIso8601String(),
     'dueDate': dueDate.toIso8601String(),
     'items': items.map((e) => e.toJson()).toList(),
@@ -87,6 +90,7 @@ class Invoice {
     customerName: json['customerName'],
     customerEmail: json['customerEmail'],
     customerAddress: json['customerAddress'] ?? '18 Willow Ave, Denver, CO 80203',
+    customerPhone: json['customerPhone'] ?? '+1 (303) 555-0199',
     date: DateTime.parse(json['date']),
     dueDate: DateTime.parse(json['dueDate']),
     items: (json['items'] as List).map((e) => InvoiceItem.fromJson(e)).toList(),

@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
+import 'dashboard_screen.dart';
 
 class LoginScreen extends StatefulWidget {
   const LoginScreen({super.key});
@@ -10,6 +11,7 @@ class LoginScreen extends StatefulWidget {
 
 class _LoginScreenState extends State<LoginScreen> {
   bool _isPasswordVisible = false;
+  bool _rememberMe = false;
 
   @override
   Widget build(BuildContext context) {
@@ -47,8 +49,21 @@ class _LoginScreenState extends State<LoginScreen> {
             child: SingleChildScrollView(
               padding: const EdgeInsets.symmetric(horizontal: 30),
               child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  const SizedBox(height: 40),
+                  IconButton(
+                    padding: EdgeInsets.zero,
+                    alignment: Alignment.centerLeft,
+                    onPressed: () {
+                      Navigator.pop(context);
+                    },
+                    icon: const Icon(
+                      Icons.arrow_back,
+                      color: Color(0xFF2A2859),
+                      size: 30,
+                    ),
+                  ),
+                  const SizedBox(height: 10),
                   // Logo
                   Center(
                     child: Container(
@@ -67,19 +82,23 @@ class _LoginScreenState extends State<LoginScreen> {
                   ),
                   const SizedBox(height: 30),
                   // Title
-                  const Text(
-                    'Welcome back',
-                    style: TextStyle(
-                      fontSize: 32,
-                      fontWeight: FontWeight.bold,
-                      color: Color(0xFF2A2859),
-                      fontFamily: 'Serif',
+                  const Center(
+                    child: Text(
+                      'Welcome back',
+                      style: TextStyle(
+                        fontSize: 32,
+                        fontWeight: FontWeight.bold,
+                        color: Color(0xFF2A2859),
+                        fontFamily: 'Serif',
+                      ),
                     ),
                   ),
                   const SizedBox(height: 10),
-                  const Text(
-                    'Log in to manage your invoices',
-                    style: TextStyle(fontSize: 16, color: Color(0xFF6C699E)),
+                  const Center(
+                    child: Text(
+                      'Log in to manage your invoices',
+                      style: TextStyle(fontSize: 16, color: Color(0xFF6C699E)),
+                    ),
                   ),
                   const SizedBox(height: 40),
                   
@@ -98,7 +117,7 @@ class _LoginScreenState extends State<LoginScreen> {
                       const SizedBox(height: 10),
                       TextField(
                         decoration: InputDecoration(
-                          hintText: 'alex@acmestudio.com',
+                          hintText: 'awais@acmestudio.com',
                           filled: true,
                           fillColor: Colors.white,
                           border: OutlineInputBorder(
@@ -152,15 +171,34 @@ class _LoginScreenState extends State<LoginScreen> {
                   ),
                   
                   const SizedBox(height: 10),
-                  Align(
-                    alignment: Alignment.centerRight,
-                    child: TextButton(
-                      onPressed: () {},
-                      child: const Text(
-                        'Forgot password?',
-                        style: TextStyle(color: Color(0xFFE25E31)),
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      Row(
+                        children: [
+                          Checkbox(
+                            value: _rememberMe,
+                            activeColor: const Color(0xFFE25E31),
+                            onChanged: (value) {
+                              setState(() {
+                                _rememberMe = value!;
+                              });
+                            },
+                          ),
+                          const Text(
+                            'Remember me',
+                            style: TextStyle(color: Color(0xFF2A2859)),
+                          ),
+                        ],
                       ),
-                    ),
+                      TextButton(
+                        onPressed: () {},
+                        child: const Text(
+                          'Forgot password?',
+                          style: TextStyle(color: Color(0xFFE25E31)),
+                        ),
+                      ),
+                    ],
                   ),
                   
                   const SizedBox(height: 20),
@@ -169,7 +207,14 @@ class _LoginScreenState extends State<LoginScreen> {
                     width: double.infinity,
                     height: 60,
                     child: ElevatedButton(
-                      onPressed: () {},
+                      onPressed: () {
+                        Navigator.pushReplacement(
+                          context,
+                          MaterialPageRoute(
+                            builder: (context) => const DashboardScreen(),
+                          ),
+                        );
+                      },
                       style: ElevatedButton.styleFrom(
                         backgroundColor: const Color(0xFFE25E31),
                         foregroundColor: Colors.white,
@@ -268,16 +313,6 @@ class _LoginScreenState extends State<LoginScreen> {
                   const SizedBox(height: 20),
                 ],
               ),
-            ),
-          ),
-          
-          // Back Button
-          Positioned(
-            top: 40,
-            left: 10,
-            child: IconButton(
-              icon: const Icon(Icons.arrow_back, color: Color(0xFF2A2859), size: 30),
-              onPressed: () => Navigator.pop(context),
             ),
           ),
         ],

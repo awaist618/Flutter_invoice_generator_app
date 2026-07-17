@@ -173,11 +173,11 @@ class AboutDeveloperScreen extends StatelessWidget {
                     ),
                     child: Column(
                       children: [
-                        _buildActionTile(Icons.star_outline, 'Rate this app', () {}),
+                        _buildActionTile(Icons.star_outline, 'Rate this app', () => _launchUrl('https://play.google.com/store/apps/details?id=com.example.invoice_generator_app')),
                         _buildDivider(isDark),
                         _buildActionTile(Icons.chat_bubble_outline, 'Send feedback', () => _launchUrl('mailto:at2544344@gmail.com?subject=Feedback for Invoicely')),
                         _buildDivider(isDark),
-                        _buildActionTile(Icons.shield_outlined, 'Privacy policy', () => _launchUrl('https://awais-portfolio0.vercel.app/privacy')),
+                        _buildActionTile(Icons.shield_outlined, 'Privacy policy', () => _showPrivacyPolicy(context)),
                         _buildDivider(isDark),
                         _buildActionTile(Icons.file_copy_outlined, 'Open-source licenses', () {
                           showLicensePage(
@@ -198,6 +198,32 @@ class AboutDeveloperScreen extends StatelessWidget {
                 ],
               ),
             ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  void _showPrivacyPolicy(BuildContext context) {
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('Privacy Policy', style: TextStyle(fontWeight: FontWeight.bold)),
+        content: const SingleChildScrollView(
+          child: Text(
+            'Privacy Policy for Invoicely\n\n'
+            '1. Information Collection: Invoicely is designed to be a local-first application. We do not collect or store your personal data on any external servers. All invoice data, customer details, and settings are stored locally on your device.\n\n'
+            '2. Data Security: Your data is your own. Since we do not have a backend, your information remains private to your device. We recommend using device-level security (passwords/biometrics) to protect your phone.\n\n'
+            '3. Third-Party Services: The app uses PDF generation and local notification libraries. These operate locally and do not share your data.\n\n'
+            '4. Backup/Restore: If you use the backup feature, the generated files are handled by you and can be stored wherever you choose (Google Drive, Email, etc.).\n\n'
+            '5. Contact: For any questions regarding privacy, please contact us at at2544344@gmail.com.',
+            style: TextStyle(height: 1.5),
+          ),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: const Text('Close'),
           ),
         ],
       ),

@@ -5,6 +5,7 @@ import 'package:image_picker/image_picker.dart';
 import '../services/settings_provider.dart';
 import '../services/invoice_provider.dart';
 import 'welcome_screen.dart';
+import 'about_developer_screen.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 
 class SettingsScreen extends StatelessWidget {
@@ -263,6 +264,18 @@ class SettingsScreen extends StatelessWidget {
                           colorScheme: colorScheme,
                         ),
                         */
+                        Divider(height: 1, indent: 20, endIndent: 20, color: isDark ? Colors.white12 : Colors.grey.shade200),
+                        _buildPreferenceItem(
+                          'About Developer',
+                          '',
+                          onTap: () {
+                            Navigator.push(
+                              context,
+                              MaterialPageRoute(builder: (context) => const AboutDeveloperScreen()),
+                            );
+                          },
+                          colorScheme: colorScheme,
+                        ),
                       ],
                     ),
                   ),

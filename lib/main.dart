@@ -8,22 +8,30 @@ import 'services/customer_provider.dart';
 import 'services/product_provider.dart';
 
 void main() async {
-  WidgetsFlutterBinding.ensureInitialized();
-  
-  // Initialize Notification Service
-  await NotificationService().init();
-  
-  runApp(
-    MultiProvider(
-      providers: [
-        ChangeNotifierProvider(create: (_) => InvoiceProvider()..loadInvoices()),
-        ChangeNotifierProvider(create: (_) => SettingsProvider()),
-        ChangeNotifierProvider(create: (_) => CustomerProvider()),
-        ChangeNotifierProvider(create: (_) => ProductProvider()),
-      ],
-      child: const InvoicelyApp(),
-    ),
-  );
+  try {
+    WidgetsFlutterBinding.ensureInitialized();
+    
+    // Initialize Notification Service safely
+    try {
+      await NotificationService().init();
+    } catch (e) {
+      debugPrint('Notification initialization failed: $e');
+    }
+    
+    runApp(
+      MultiProvider(
+        providers: [
+          ChangeNotifierProvider(create: (_) => InvoiceProvider()..loadInvoices()),
+          ChangeNotifierProvider(create: (_) => SettingsProvider()),
+          ChangeNotifierProvider(create: (_) => CustomerProvider()),
+          ChangeNotifierProvider(create: (_) => ProductProvider()),
+        ],
+        child: const InvoicelyApp(),
+      ),
+    );
+  } catch (e) {
+    debugPrint('Fatal initialization error: $e');
+  }
 }
 
 class InvoicelyApp extends StatelessWidget {

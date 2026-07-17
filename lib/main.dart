@@ -4,6 +4,8 @@ import 'screens/welcome_screen.dart';
 import 'services/invoice_provider.dart';
 import 'services/notification_service.dart';
 import 'services/settings_provider.dart';
+import 'services/customer_provider.dart';
+import 'services/product_provider.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -16,6 +18,8 @@ void main() async {
       providers: [
         ChangeNotifierProvider(create: (_) => InvoiceProvider()..loadInvoices()),
         ChangeNotifierProvider(create: (_) => SettingsProvider()),
+        ChangeNotifierProvider(create: (_) => CustomerProvider()),
+        ChangeNotifierProvider(create: (_) => ProductProvider()),
       ],
       child: const InvoicelyApp(),
     ),

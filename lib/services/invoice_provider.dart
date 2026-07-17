@@ -3,11 +3,98 @@ import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import '../models/invoice_model.dart';
 import 'package:intl/intl.dart';
+import 'notification_service.dart';
+
+import 'dart:io';
+import 'package:path_provider/path_provider.dart';
+import 'package:csv/csv.dart';
+import 'package:share_plus/share_plus.dart';
+// import 'package:file_picker/file_picker.dart';
 
 class InvoiceProvider with ChangeNotifier {
   final List<Invoice> _invoices = [];
 
   List<Invoice> get invoices => [..._invoices];
+
+  // ... (rest of the getters)
+
+  Future<void> exportToCsv() async {
+    List<List<dynamic>> rows = [];
+    
+    // Add header
+    rows.add([
+      "Invoice Number",
+      "Customer Name",
+      "Customer Email",
+      "Date",
+      "Due Date",
+      "Status",
+      "Subtotal",
+      "Tax Amount",
+      "Total"
+    ]);
+
+    for (var inv in _invoices) {
+      rows.add([
+        inv.invoiceNumber,
+        inv.customerName,
+        inv.customerEmail,
+        DateFormat('yyyy-MM-dd').format(inv.date),
+        DateFormat('yyyy-MM-dd').format(inv.dueDate),
+        inv.status.name,
+        inv.subtotal,
+        inv.taxAmount,
+        inv.total
+      ]);
+    }
+
+    String csvData = const ListToCsvConverter().convert(rows);
+    final directory = await getTemporaryDirectory();
+    final file = File('${directory.path}/invoices_export.csv');
+    await file.writeAsString(csvData);
+    
+    await Share.shareXFiles([XFile(file.path)], text: 'Invoices Export');
+  }
+
+  Future<void> backupData() async {
+    final data = jsonEncode(_invoices.map((e) => e.toJson()).toList());
+    final directory = await getApplicationDocumentsDirectory();
+    final file = File('${directory.path}/invoicely_backup.json');
+    await file.writeAsString(data);
+    
+    await Share.shareXFiles([XFile(file.path)], text: 'Invoicely Data Backup');
+  }
+
+  Future<bool> restoreData() async {
+    // Feature removed due to build issues with file_picker
+    debugPrint('Restore feature is currently disabled');
+    return false;
+    /*
+    FilePickerResult? result = await FilePicker.pickFiles(
+      type: FileType.custom,
+      allowedExtensions: ['json'],
+    );
+
+    if (result != null) {
+      File file = File(result.files.single.path!);
+      String content = await file.readAsString();
+      try {
+        final List decoded = jsonDecode(content);
+        _invoices.clear();
+        _invoices.addAll(decoded.map((e) => Invoice.fromJson(e)).toList());
+        await _saveToLocal();
+        notifyListeners();
+        return true;
+      } catch (e) {
+        debugPrint('Restore failed: $e');
+        return false;
+      }
+    }
+    return false;
+    */
+  }
+
+  // ... (rest of the methods)
 
   List<Invoice> get recentInvoices => _invoices.reversed.take(5).toList();
 
@@ -42,31 +129,71 @@ class InvoiceProvider with ChangeNotifier {
 
   Future<void> addInvoice(Invoice invoice) async {
     _invoices.add(invoice);
+    _checkOverdueStatus();
     await _saveToLocal();
+    
+    // Schedule notification for due date
+    try {
+      await NotificationService().scheduleInvoiceReminders(
+        invoice.id.hashCode,
+        invoice.invoiceNumber,
+        invoice.dueDate,
+      );
+    } catch (e) {
+      debugPrint('Failed to schedule notification: $e');
+    }
+
     notifyListeners();
+  }
+
+  Future<void> deleteInvoice(String id) async {
+    final index = _invoices.indexWhere((inv) => inv.id == id);
+    if (index != -1) {
+      final invoice = _invoices[index];
+      // Cancel notifications
+      try {
+        await NotificationService().cancelAllReminders(invoice.id.hashCode);
+      } catch (e) {
+        debugPrint('Failed to cancel notifications: $e');
+      }
+      _invoices.removeAt(index);
+      await _saveToLocal();
+      notifyListeners();
+    }
   }
 
   Future<void> updateInvoiceStatus(String id, InvoiceStatus newStatus) async {
     final index = _invoices.indexWhere((inv) => inv.id == id);
     if (index != -1) {
-      final oldInvoice = _invoices[index];
-      _invoices[index] = Invoice(
-        id: oldInvoice.id,
-        invoiceNumber: oldInvoice.invoiceNumber,
-        customerName: oldInvoice.customerName,
-        customerEmail: oldInvoice.customerEmail,
-        customerAddress: oldInvoice.customerAddress,
-        customerPhone: oldInvoice.customerPhone,
-        date: oldInvoice.date,
-        dueDate: oldInvoice.dueDate,
-        items: oldInvoice.items,
-        taxRate: oldInvoice.taxRate,
-        status: newStatus,
-        notes: oldInvoice.notes,
-        paymentInstructions: oldInvoice.paymentInstructions,
-      );
+      final invoice = _invoices[index];
+      _invoices[index] = invoice.copyWith(status: newStatus);
+      
+      // Cancel notifications if paid
+      if (newStatus == InvoiceStatus.paid) {
+        try {
+          await NotificationService().cancelAllReminders(invoice.id.hashCode);
+        } catch (e) {
+          debugPrint('Failed to cancel notifications: $e');
+        }
+      }
+
       await _saveToLocal();
       notifyListeners();
+    }
+  }
+
+  void _checkOverdueStatus() {
+    final now = DateTime.now();
+    bool changed = false;
+    for (int i = 0; i < _invoices.length; i++) {
+      if (_invoices[i].status == InvoiceStatus.unpaid &&
+          _invoices[i].dueDate.isBefore(DateTime(now.year, now.month, now.day))) {
+        _invoices[i] = _invoices[i].copyWith(status: InvoiceStatus.overdue);
+        changed = true;
+      }
+    }
+    if (changed) {
+      _saveToLocal();
     }
   }
 
@@ -84,6 +211,7 @@ class InvoiceProvider with ChangeNotifier {
       final List decoded = jsonDecode(data);
       _invoices.clear();
       _invoices.addAll(decoded.map((e) => Invoice.fromJson(e)).toList());
+      _checkOverdueStatus();
     } else {
       // Initializing with some dummy data if nothing is saved
       _invoices.clear();

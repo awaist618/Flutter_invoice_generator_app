@@ -78,6 +78,12 @@ class _InvoicesListScreenState extends State<InvoicesListScreen> {
                           fontFamily: 'Serif',
                         ),
                       ),
+                      const Spacer(),
+                      IconButton(
+                        onPressed: () => provider.exportToCsv(),
+                        icon: Icon(Icons.file_download_outlined, color: colorScheme.primary),
+                        tooltip: 'Export CSV',
+                      ),
                     ],
                   ),
                   const SizedBox(height: 20),
@@ -243,6 +249,7 @@ class _InvoicesListScreenState extends State<InvoicesListScreen> {
           ),
         );
       },
+      onLongPress: () => _showDeleteDialog(context, inv),
       child: Container(
         margin: const EdgeInsets.only(bottom: 15),
         padding: const EdgeInsets.all(15),
@@ -323,6 +330,32 @@ class _InvoicesListScreenState extends State<InvoicesListScreen> {
             ),
           ],
         ),
+      ),
+    );
+  }
+
+  void _showDeleteDialog(BuildContext context, Invoice invoice) {
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('Delete Invoice'),
+        content: Text('Are you sure you want to delete invoice ${invoice.invoiceNumber}?'),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: const Text('Cancel'),
+          ),
+          TextButton(
+            onPressed: () {
+              Provider.of<InvoiceProvider>(context, listen: false).deleteInvoice(invoice.id);
+              Navigator.pop(context);
+              ScaffoldMessenger.of(context).showSnackBar(
+                SnackBar(content: Text('Invoice ${invoice.invoiceNumber} deleted')),
+              );
+            },
+            child: const Text('Delete', style: TextStyle(color: Colors.red)),
+          ),
+        ],
       ),
     );
   }

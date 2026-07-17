@@ -22,6 +22,10 @@ class PdfService {
       logoImage = pw.MemoryImage(File(settings.logoPath!).readAsBytesSync());
     }
 
+    if (settings.selectedTemplate == 'Minimal') {
+      return _generateMinimalTemplate(pdf, invoice, settings, font, fontBold, logoImage);
+    }
+
     pdf.addPage(
       pw.Page(
         pageFormat: PdfPageFormat.a4,
@@ -36,16 +40,16 @@ class PdfService {
                 children: [
                   pw.Row(
                     children: [
-                      pw.Container(
-                        width: 60,
-                        height: 60,
-                        decoration: pw.BoxDecoration(
-                          color: PdfColor.fromInt(0xFF3D3B8E),
-                          borderRadius: pw.BorderRadius.circular(15),
-                          image: logoImage != null ? pw.DecorationImage(image: logoImage, fit: pw.BoxFit.cover) : null,
+                      if (logoImage != null)
+                        pw.Container(
+                          width: 60,
+                          height: 60,
+                          margin: const pw.EdgeInsets.only(right: 15),
+                          decoration: pw.BoxDecoration(
+                            borderRadius: pw.BorderRadius.circular(15),
+                            image: pw.DecorationImage(image: logoImage, fit: pw.BoxFit.cover),
+                          ),
                         ),
-                      ),
-                      pw.SizedBox(width: 15),
                       pw.Column(
                         crossAxisAlignment: pw.CrossAxisAlignment.start,
                         children: [
@@ -149,10 +153,30 @@ class PdfService {
               ),
               pw.SizedBox(height: 30),
 
-              // Summary
+              // Summary & QR
               pw.Row(
-                mainAxisAlignment: pw.MainAxisAlignment.end,
+                mainAxisAlignment: pw.MainAxisAlignment.spaceBetween,
+                crossAxisAlignment: pw.CrossAxisAlignment.end,
                 children: [
+                  // Payment QR
+                  pw.Column(
+                    crossAxisAlignment: pw.CrossAxisAlignment.start,
+                    children: [
+                      pw.Text('PAYMENT QR', style: pw.TextStyle(font: fontBold, fontSize: 10, color: PdfColors.grey700)),
+                      pw.SizedBox(height: 5),
+                      pw.Container(
+                        width: 100,
+                        height: 100,
+                        child: pw.BarcodeWidget(
+                          barcode: pw.Barcode.qrCode(),
+                          data: settings.paymentDetails,
+                          drawText: false,
+                        ),
+                      ),
+                      pw.SizedBox(height: 5),
+                      pw.Text('Scan to pay via UPI/Bank', style: pw.TextStyle(font: font, fontSize: 8, color: PdfColors.grey600)),
+                    ],
+                  ),
                   pw.Column(
                     crossAxisAlignment: pw.CrossAxisAlignment.end,
                     children: [
@@ -179,12 +203,115 @@ class PdfService {
                   ),
                 ],
               ),
+              
+              if (invoice.notes.isNotEmpty) ...[
+                pw.SizedBox(height: 30),
+                pw.Text('NOTES', style: pw.TextStyle(font: fontBold, fontSize: 10, color: PdfColors.grey700)),
+                pw.SizedBox(height: 5),
+                pw.Text(invoice.notes, style: pw.TextStyle(font: font, fontSize: 10, color: PdfColors.grey800)),
+              ],
             ],
           );
         },
       ),
     );
 
+    return pdf.save();
+  }
+
+  static Future<Uint8List> _generateMinimalTemplate(
+    pw.Document pdf,
+    Invoice invoice,
+    SettingsProvider settings,
+    pw.Font font,
+    pw.Font fontBold,
+    pw.MemoryImage? logoImage,
+  ) async {
+    pdf.addPage(
+      pw.Page(
+        pageFormat: PdfPageFormat.a4,
+        build: (pw.Context context) {
+          return pw.Column(
+            crossAxisAlignment: pw.CrossAxisAlignment.start,
+            children: [
+              pw.Row(
+                mainAxisAlignment: pw.MainAxisAlignment.spaceBetween,
+                children: [
+                  pw.Text('INVOICE', style: pw.TextStyle(font: fontBold, fontSize: 24)),
+                  if (logoImage != null) pw.Image(logoImage, width: 50, height: 50),
+                ],
+              ),
+              pw.SizedBox(height: 20),
+              pw.Row(
+                mainAxisAlignment: pw.MainAxisAlignment.spaceBetween,
+                children: [
+                  pw.Column(
+                    crossAxisAlignment: pw.CrossAxisAlignment.start,
+                    children: [
+                      pw.Text('From:', style: pw.TextStyle(font: fontBold)),
+                      pw.Text(settings.companyName),
+                      pw.Text(settings.companyAddress),
+                    ],
+                  ),
+                  pw.Column(
+                    crossAxisAlignment: pw.CrossAxisAlignment.end,
+                    children: [
+                      pw.Text('Invoice #: ${invoice.invoiceNumber}'),
+                      pw.Text('Date: ${DateFormat('yyyy-MM-dd').format(invoice.date)}'),
+                    ],
+                  ),
+                ],
+              ),
+              pw.SizedBox(height: 20),
+              pw.Text('Bill To:', style: pw.TextStyle(font: fontBold)),
+              pw.Text(invoice.customerName),
+              pw.Text(invoice.customerAddress),
+              pw.SizedBox(height: 20),
+              pw.Table.fromTextArray(
+                context: context,
+                headerStyle: pw.TextStyle(font: fontBold),
+                headers: ['Description', 'Qty', 'Unit Price', 'Total'],
+                data: invoice.items.map((item) => [
+                  item.name,
+                  item.quantity.toString(),
+                  '${settings.currencySymbol}${item.unitPrice}',
+                  '${settings.currencySymbol}${item.total.toStringAsFixed(2)}',
+                ]).toList(),
+              ),
+              pw.SizedBox(height: 20),
+              pw.Row(
+                mainAxisAlignment: pw.MainAxisAlignment.end,
+                children: [
+                  pw.Column(
+                    crossAxisAlignment: pw.CrossAxisAlignment.end,
+                    children: [
+                      pw.Text('Subtotal: ${settings.currencySymbol}${invoice.subtotal.toStringAsFixed(2)}'),
+                      pw.Text('Tax: ${settings.currencySymbol}${invoice.taxAmount.toStringAsFixed(2)}'),
+                      pw.Text('Total: ${settings.currencySymbol}${invoice.total.toStringAsFixed(2)}', style: pw.TextStyle(font: fontBold)),
+                    ],
+                  ),
+                ],
+              ),
+              pw.Spacer(),
+              pw.Center(
+                child: pw.Column(
+                  children: [
+                    pw.BarcodeWidget(
+                      barcode: pw.Barcode.qrCode(),
+                      data: settings.paymentDetails,
+                      width: 80,
+                      height: 80,
+                    ),
+                    pw.SizedBox(height: 5),
+                    pw.Text('Payment QR', style: pw.TextStyle(fontSize: 8)),
+                  ],
+                ),
+              ),
+            ],
+          );
+        },
+      ),
+    );
     return pdf.save();
   }
 

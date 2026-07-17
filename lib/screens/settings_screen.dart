@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:image_picker/image_picker.dart';
 import '../services/settings_provider.dart';
+import '../services/invoice_provider.dart';
 import 'welcome_screen.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 
@@ -21,6 +22,7 @@ class SettingsScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final settings = Provider.of<SettingsProvider>(context);
+    final invoiceProvider = Provider.of<InvoiceProvider>(context, listen: false);
     final theme = Theme.of(context);
     final colorScheme = theme.colorScheme;
     final isDark = theme.brightness == Brightness.dark;
@@ -155,6 +157,17 @@ class SettingsScreen extends StatelessWidget {
                   ),
                   const SizedBox(height: 30),
 
+                  _buildSectionTitle('Payment Details (QR Code)', colorScheme),
+                  const SizedBox(height: 10),
+                  _buildTextField(
+                    initialValue: settings.paymentDetails,
+                    onChanged: (val) => settings.updatePaymentDetails(val),
+                    colorScheme: colorScheme,
+                    isDark: isDark,
+                    hint: 'UPI ID / Bank Details / PayPal',
+                  ),
+                  const SizedBox(height: 30),
+
                   _buildSectionTitle('Invoice preferences', colorScheme),
                   const SizedBox(height: 15),
                   Container(
@@ -165,6 +178,13 @@ class SettingsScreen extends StatelessWidget {
                     ),
                     child: Column(
                       children: [
+                        _buildPreferenceItem(
+                          'Invoice Template',
+                          settings.selectedTemplate,
+                          onTap: () => _showTemplateDialog(context, settings),
+                          colorScheme: colorScheme,
+                        ),
+                        Divider(height: 1, indent: 20, endIndent: 20, color: isDark ? Colors.white12 : Colors.grey.shade200),
                         _buildPreferenceItem(
                           'Currency',
                           settings.currency,
@@ -203,6 +223,46 @@ class SettingsScreen extends StatelessWidget {
                             ],
                           ),
                         ),
+                      ],
+                    ),
+                  ),
+                  const SizedBox(height: 30),
+
+                  _buildSectionTitle('Data Management', colorScheme),
+                  const SizedBox(height: 15),
+                  Container(
+                    decoration: BoxDecoration(
+                      color: colorScheme.surface,
+                      borderRadius: BorderRadius.circular(25),
+                      border: isDark ? Border.all(color: Colors.white12) : null,
+                    ),
+                    child: Column(
+                      children: [
+                        _buildPreferenceItem(
+                          'Backup Data',
+                          'Share Backup',
+                          onTap: () => invoiceProvider.backupData(),
+                          colorScheme: colorScheme,
+                        ),
+                        /*
+                        Divider(height: 1, indent: 20, endIndent: 20, color: isDark ? Colors.white12 : Colors.grey.shade200),
+                        _buildPreferenceItem(
+                          'Restore Data',
+                          'Import JSON',
+                          onTap: () async {
+                            final success = await invoiceProvider.restoreData();
+                            if (context.mounted) {
+                              ScaffoldMessenger.of(context).showSnackBar(
+                                SnackBar(
+                                  content: Text(success ? 'Data restored successfully' : 'Restore failed'),
+                                  backgroundColor: success ? Colors.green : Colors.red,
+                                ),
+                              );
+                            }
+                          },
+                          colorScheme: colorScheme,
+                        ),
+                        */
                       ],
                     ),
                   ),
@@ -296,6 +356,24 @@ class SettingsScreen extends StatelessWidget {
     );
   }
 
+  void _showTemplateDialog(BuildContext context, SettingsProvider settings) {
+    showDialog(
+      context: context,
+      builder: (context) => SimpleDialog(
+        title: const Text('Select Template'),
+        children: ['Modern', 'Minimal'].map((e) {
+          return SimpleDialogOption(
+            onPressed: () {
+              settings.updateTemplate(e);
+              Navigator.pop(context);
+            },
+            child: Text(e),
+          );
+        }).toList(),
+      ),
+    );
+  }
+
   void _showCurrencyDialog(BuildContext context, SettingsProvider settings) {
     showDialog(
       context: context,
@@ -359,3 +437,4 @@ class SettingsScreen extends StatelessWidget {
     );
   }
 }
+

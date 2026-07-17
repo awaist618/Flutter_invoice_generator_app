@@ -85,39 +85,46 @@ class InvoiceDetailScreen extends StatelessWidget {
                           mainAxisAlignment: MainAxisAlignment.spaceBetween,
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
-                            Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                Text(
-                                  settings.companyName,
-                                  style: TextStyle(
-                                    fontSize: 22,
-                                    fontWeight: FontWeight.bold,
-                                    color: colorScheme.onSurface,
+                            Expanded(
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  Text(
+                                    settings.companyName,
+                                    style: TextStyle(
+                                      fontSize: 22,
+                                      fontWeight: FontWeight.bold,
+                                      color: colorScheme.onSurface,
+                                    ),
+                                    maxLines: 1,
+                                    overflow: TextOverflow.ellipsis,
                                   ),
-                                ),
-                                const SizedBox(height: 5),
-                                Text(
-                                  settings.companyAddress,
-                                  style: TextStyle(
-                                    color: colorScheme.onSurfaceVariant,
-                                    fontSize: 14,
+                                  const SizedBox(height: 5),
+                                  Text(
+                                    settings.companyAddress,
+                                    style: TextStyle(
+                                      color: colorScheme.onSurfaceVariant,
+                                      fontSize: 14,
+                                    ),
+                                    maxLines: 2,
+                                    overflow: TextOverflow.ellipsis,
                                   ),
-                                ),
-                                Text(
-                                  '${settings.companyEmail}  ·  ${settings.companyPhone}',
-                                  style: TextStyle(
-                                    color: colorScheme.onSurfaceVariant,
-                                    fontSize: 12,
+                                  Text(
+                                    '${settings.companyEmail}  ·  ${settings.companyPhone}',
+                                    style: TextStyle(
+                                      color: colorScheme.onSurfaceVariant,
+                                      fontSize: 12,
+                                    ),
+                                    maxLines: 1,
+                                    overflow: TextOverflow.ellipsis,
                                   ),
-                                ),
-                              ],
+                                ],
+                              ),
                             ),
+                            const SizedBox(width: 10),
                             GestureDetector(
                               onTap: () {
-                                if (invoice.status != InvoiceStatus.paid) {
-                                  _showStatusDialog(context, invoice);
-                                }
+                                _showStatusDialog(context, invoice);
                               },
                               child: _buildStatusBadge(invoice.status),
                             ),
@@ -128,50 +135,65 @@ class InvoiceDetailScreen extends StatelessWidget {
                         // Billed to and Due Date
                         Row(
                           mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                          crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
-                            Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                Text(
-                                  'Billed to',
-                                  style: TextStyle(color: colorScheme.onSurfaceVariant, fontSize: 14),
-                                ),
-                                const SizedBox(height: 5),
-                                Text(
-                                  invoice.customerName,
-                                  style: TextStyle(
-                                    fontSize: 18,
-                                    fontWeight: FontWeight.bold,
-                                    color: colorScheme.onSurface,
+                            Expanded(
+                              flex: 3,
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  Text(
+                                    'Billed to',
+                                    style: TextStyle(color: colorScheme.onSurfaceVariant, fontSize: 14),
                                   ),
-                                ),
-                                Text(
-                                  invoice.customerAddress,
-                                  style: TextStyle(color: colorScheme.onSurfaceVariant, fontSize: 12),
-                                ),
-                                Text(
-                                  '${invoice.customerEmail}  ·  ${invoice.customerPhone}',
-                                  style: TextStyle(color: colorScheme.onSurfaceVariant, fontSize: 12),
-                                ),
-                              ],
+                                  const SizedBox(height: 5),
+                                  Text(
+                                    invoice.customerName,
+                                    style: TextStyle(
+                                      fontSize: 18,
+                                      fontWeight: FontWeight.bold,
+                                      color: colorScheme.onSurface,
+                                    ),
+                                    maxLines: 1,
+                                    overflow: TextOverflow.ellipsis,
+                                  ),
+                                  Text(
+                                    invoice.customerAddress,
+                                    style: TextStyle(color: colorScheme.onSurfaceVariant, fontSize: 12),
+                                    maxLines: 2,
+                                    overflow: TextOverflow.ellipsis,
+                                  ),
+                                  Text(
+                                    '${invoice.customerEmail}  ·  ${invoice.customerPhone}',
+                                    style: TextStyle(color: colorScheme.onSurfaceVariant, fontSize: 12),
+                                    maxLines: 1,
+                                    overflow: TextOverflow.ellipsis,
+                                  ),
+                                ],
+                              ),
                             ),
-                            Column(
-                              crossAxisAlignment: CrossAxisAlignment.end,
-                              children: [
-                                Text(
-                                  'Due date',
-                                  style: TextStyle(color: colorScheme.onSurfaceVariant, fontSize: 14),
-                                ),
-                                const SizedBox(height: 5),
-                                Text(
-                                  DateFormat('MMM dd, yyyy').format(invoice.dueDate),
-                                  style: TextStyle(
-                                    fontSize: 16,
-                                    fontWeight: FontWeight.bold,
-                                    color: colorScheme.onSurface,
+                            const SizedBox(width: 10),
+                            Expanded(
+                              flex: 2,
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.end,
+                                children: [
+                                  Text(
+                                    'Due date',
+                                    style: TextStyle(color: colorScheme.onSurfaceVariant, fontSize: 14),
                                   ),
-                                ),
-                              ],
+                                  const SizedBox(height: 5),
+                                  Text(
+                                    DateFormat('MMM dd, yyyy').format(invoice.dueDate),
+                                    style: TextStyle(
+                                      fontSize: 16,
+                                      fontWeight: FontWeight.bold,
+                                      color: colorScheme.onSurface,
+                                    ),
+                                    textAlign: TextAlign.right,
+                                  ),
+                                ],
+                              ),
                             ),
                           ],
                         ),
@@ -187,13 +209,18 @@ class InvoiceDetailScreen extends StatelessWidget {
                           child: Row(
                             mainAxisAlignment: MainAxisAlignment.spaceBetween,
                             children: [
-                              Text(
-                                item.name,
-                                style: TextStyle(
-                                  fontSize: 16,
-                                  color: colorScheme.onSurface,
+                              Expanded(
+                                child: Text(
+                                  item.name,
+                                  style: TextStyle(
+                                    fontSize: 16,
+                                    color: colorScheme.onSurface,
+                                  ),
+                                  maxLines: 2,
+                                  overflow: TextOverflow.ellipsis,
                                 ),
                               ),
+                              const SizedBox(width: 10),
                               Text(
                                 '${settings.currencySymbol}${NumberFormat("#,##0.00").format(item.total)}',
                                 style: TextStyle(
@@ -205,7 +232,7 @@ class InvoiceDetailScreen extends StatelessWidget {
                             ],
                           ),
                         )).toList(),
-
+                        
                         const SizedBox(height: 10),
                         const Divider(),
                         const SizedBox(height: 15),
@@ -222,12 +249,16 @@ class InvoiceDetailScreen extends StatelessWidget {
                                 color: colorScheme.onSurface,
                               ),
                             ),
-                            Text(
-                              '${settings.currencySymbol}${NumberFormat("#,##0.00").format(invoice.total)}',
-                              style: TextStyle(
-                                fontSize: 24,
-                                fontWeight: FontWeight.bold,
-                                color: colorScheme.onSurface,
+                            Flexible(
+                              child: Text(
+                                '${settings.currencySymbol}${NumberFormat("#,##0.00").format(invoice.total)}',
+                                style: TextStyle(
+                                  fontSize: 24,
+                                  fontWeight: FontWeight.bold,
+                                  color: colorScheme.onSurface,
+                                ),
+                                maxLines: 1,
+                                overflow: TextOverflow.ellipsis,
                               ),
                             ),
                           ],

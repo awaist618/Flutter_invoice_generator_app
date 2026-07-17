@@ -5,6 +5,10 @@ import '../models/invoice_model.dart';
 import '../services/invoice_provider.dart';
 import '../services/settings_provider.dart';
 import '../services/notification_service.dart';
+import '../services/customer_provider.dart';
+import '../services/product_provider.dart';
+import '../models/customer_model.dart';
+import '../models/product_model.dart';
 
 class CreateInvoiceScreen extends StatefulWidget {
   const CreateInvoiceScreen({super.key});
@@ -65,7 +69,160 @@ class _CreateInvoiceScreenState extends State<CreateInvoiceScreen> {
     }
   }
 
+  void _showSavedCustomersPicker() {
+    final customerProvider = Provider.of<CustomerProvider>(context, listen: false);
+    if (customerProvider.customers.isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('No saved customers found')),
+      );
+      return;
+    }
+
+    showModalBottomSheet(
+      context: context,
+      shape: const RoundedRectangleBorder(borderRadius: BorderRadius.vertical(top: Radius.circular(25))),
+      builder: (context) => Container(
+        padding: const EdgeInsets.all(20),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            const Text('Pick a Customer', style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold)),
+            const SizedBox(height: 20),
+            Flexible(
+              child: ListView.builder(
+                shrinkWrap: true,
+                itemCount: customerProvider.customers.length,
+                itemBuilder: (context, index) {
+                  final customer = customerProvider.customers[index];
+                  return ListTile(
+                    title: Text(customer.name, style: const TextStyle(fontWeight: FontWeight.bold)),
+                    subtitle: Text(customer.email),
+                    onTap: () {
+                      setState(() {
+                        _nameController.text = customer.name;
+                        _emailController.text = customer.email;
+                        _addressController.text = customer.address;
+                        _phoneController.text = customer.phone;
+                      });
+                      Navigator.pop(context);
+                    },
+                  );
+                },
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  void _showSavedProductsPicker() {
+    final productProvider = Provider.of<ProductProvider>(context, listen: false);
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      shape: const RoundedRectangleBorder(borderRadius: BorderRadius.vertical(top: Radius.circular(25))),
+      builder: (context) => Container(
+        padding: const EdgeInsets.all(20),
+        constraints: BoxConstraints(maxHeight: MediaQuery.of(context).size.height * 0.7),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            const Text('Pick a Product', style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold)),
+            const SizedBox(height: 20),
+            Flexible(
+              child: ListView.builder(
+                shrinkWrap: true,
+                itemCount: productProvider.products.length,
+                itemBuilder: (context, index) {
+                  final product = productProvider.products[index];
+                  return ListTile(
+                    title: Text(product.name, style: const TextStyle(fontWeight: FontWeight.bold)),
+                    subtitle: Text('Price: ${Provider.of<SettingsProvider>(context, listen: false).currencySymbol}${product.unitPrice}'),
+                    onTap: () {
+                      Navigator.pop(context);
+                      _showAddItemWithProduct(product);
+                    },
+                  );
+                },
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  void _showAddItemWithProduct(Product product) {
+    final nameController = TextEditingController(text: product.name);
+    final qtyController = TextEditingController(text: '1');
+    final priceController = TextEditingController(text: product.unitPrice.toString());
+    final itemFormKey = GlobalKey<FormState>();
+
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+        title: const Text('Add Item', style: TextStyle(fontWeight: FontWeight.bold)),
+        content: Form(
+          key: itemFormKey,
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              _buildDialogField(nameController, 'Item name', TextInputType.text, (val) => val!.isEmpty ? 'Enter item name' : null),
+              const SizedBox(height: 10),
+              Row(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Expanded(
+                    child: _buildDialogField(qtyController, 'Qty', TextInputType.number, (val) {
+                      if (val!.isEmpty) return 'Required';
+                      if (int.tryParse(val) == null) return 'Invalid';
+                      return null;
+                    }),
+                  ),
+                  const SizedBox(width: 10),
+                  Expanded(
+                    child: _buildDialogField(priceController, 'Price', TextInputType.number, (val) {
+                      if (val!.isEmpty) return 'Required';
+                      if (double.tryParse(val) == null) return 'Invalid';
+                      return null;
+                    }),
+                  ),
+                ],
+              ),
+            ],
+          ),
+        ),
+        actions: [
+          TextButton(onPressed: () => Navigator.pop(context), child: const Text('Cancel')),
+          ElevatedButton(
+            onPressed: () {
+              if (itemFormKey.currentState!.validate()) {
+                setState(() {
+                  _items.add(InvoiceItem(
+                    name: nameController.text,
+                    quantity: int.tryParse(qtyController.text) ?? 1,
+                    unitPrice: double.tryParse(priceController.text) ?? 0.0,
+                  ));
+                });
+                Navigator.pop(context);
+              }
+            },
+            style: ElevatedButton.styleFrom(
+              backgroundColor: Theme.of(context).colorScheme.primary,
+              foregroundColor: Colors.white,
+              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+            ),
+            child: const Text('Add'),
+          ),
+        ],
+      ),
+    );
+  }
+
   void _addItem() {
+    final productProvider = Provider.of<ProductProvider>(context, listen: false);
     final nameController = TextEditingController();
     final qtyController = TextEditingController(text: '1');
     final priceController = TextEditingController();
@@ -76,11 +233,24 @@ class _CreateInvoiceScreenState extends State<CreateInvoiceScreen> {
       builder: (context) => AlertDialog(
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
         backgroundColor: Theme.of(context).colorScheme.surface,
-        title: Text('Add New Item', 
-          style: TextStyle(
-            color: Theme.of(context).colorScheme.onSurface, 
-            fontWeight: FontWeight.bold
-          )
+        title: Row(
+          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          children: [
+            const Text('Add New Item', 
+              style: TextStyle(
+                fontWeight: FontWeight.bold
+              )
+            ),
+            if (productProvider.products.isNotEmpty)
+              IconButton(
+                icon: const Icon(Icons.saved_search, color: Color(0xFFE25E31)),
+                onPressed: () {
+                  Navigator.pop(context);
+                  _showSavedProductsPicker();
+                },
+                tooltip: 'Pick from saved products',
+              ),
+          ],
         ),
         content: Form(
           key: itemFormKey,
@@ -229,29 +399,54 @@ class _CreateInvoiceScreenState extends State<CreateInvoiceScreen> {
                     const SizedBox(height: 30),
 
                     // Top Info Row
-                    Row(
-                      children: [
-                        _buildTopInfoCard('Invoice no.', _generatedInvoiceNo.isEmpty ? 'Loading...' : _generatedInvoiceNo, colorScheme, isDark),
-                        const SizedBox(width: 10),
-                        _buildTopInfoCard('Invoice date', DateFormat('MMM dd').format(_invoiceDate), colorScheme, isDark),
-                        const SizedBox(width: 10),
-                        GestureDetector(
-                          onTap: _selectDueDate,
-                          child: _buildTopInfoCard('Due date', DateFormat('MMM dd').format(_dueDate), colorScheme, isDark),
-                        ),
-                      ],
+                    LayoutBuilder(
+                      builder: (context, constraints) {
+                        return Wrap(
+                          spacing: 10,
+                          runSpacing: 10,
+                          children: [
+                            SizedBox(
+                              width: (constraints.maxWidth - 20) / 3,
+                              child: _buildTopInfoCard('Invoice no.', _generatedInvoiceNo.isEmpty ? '...' : _generatedInvoiceNo, colorScheme, isDark),
+                            ),
+                            SizedBox(
+                              width: (constraints.maxWidth - 20) / 3,
+                              child: _buildTopInfoCard('Date', DateFormat('MMM dd').format(_invoiceDate), colorScheme, isDark),
+                            ),
+                            SizedBox(
+                              width: (constraints.maxWidth - 20) / 3,
+                              child: GestureDetector(
+                                onTap: _selectDueDate,
+                                child: _buildTopInfoCard('Due date', DateFormat('MMM dd').format(_dueDate), colorScheme, isDark),
+                              ),
+                            ),
+                          ],
+                        );
+                      }
                     ),
                     const SizedBox(height: 30),
 
                     // Customer Section
-                    Text(
-                      'Customer',
-                      style: TextStyle(
-                        fontSize: 18,
-                        fontWeight: FontWeight.bold,
-                        color: colorScheme.onSurface,
-                        fontFamily: 'Serif',
-                      ),
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        Text(
+                          'Customer',
+                          style: TextStyle(
+                            fontSize: 18,
+                            fontWeight: FontWeight.bold,
+                            color: colorScheme.onSurface,
+                            fontFamily: 'Serif',
+                          ),
+                        ),
+                        GestureDetector(
+                          onTap: _showSavedCustomersPicker,
+                          child: Text(
+                            'Pick saved',
+                            style: TextStyle(color: colorScheme.secondary, fontWeight: FontWeight.bold),
+                          ),
+                        ),
+                      ],
                     ),
                     const SizedBox(height: 15),
                     _buildTextField(_nameController, 'Customer name', colorScheme),
@@ -396,8 +591,8 @@ class _CreateInvoiceScreenState extends State<CreateInvoiceScreen> {
                             Provider.of<InvoiceProvider>(context, listen: false).addInvoice(newInvoice);
                             
                             // Schedule notification
-                            NotificationService().scheduleDueDateNotification(
-                              newInvoice.hashCode, 
+                            NotificationService().scheduleInvoiceReminders(
+                              newInvoice.id.hashCode,
                               newInvoice.invoiceNumber, 
                               newInvoice.dueDate
                             );
@@ -433,21 +628,19 @@ class _CreateInvoiceScreenState extends State<CreateInvoiceScreen> {
   }
 
   Widget _buildTopInfoCard(String label, String value, ColorScheme colorScheme, bool isDark) {
-    return Expanded(
-      child: Container(
-        padding: const EdgeInsets.symmetric(vertical: 15, horizontal: 10),
-        decoration: BoxDecoration(
-          color: colorScheme.surface,
-          borderRadius: BorderRadius.circular(15),
-          border: isDark ? Border.all(color: Colors.white12) : null,
-        ),
-        child: Column(
-          children: [
-            Text(label, style: TextStyle(color: colorScheme.onSurfaceVariant, fontSize: 12)),
-            const SizedBox(height: 5),
-            Text(value, style: TextStyle(color: colorScheme.onSurface, fontWeight: FontWeight.bold, fontSize: 16)),
-          ],
-        ),
+    return Container(
+      padding: const EdgeInsets.symmetric(vertical: 15, horizontal: 10),
+      decoration: BoxDecoration(
+        color: colorScheme.surface,
+        borderRadius: BorderRadius.circular(15),
+        border: isDark ? Border.all(color: Colors.white12) : null,
+      ),
+      child: Column(
+        children: [
+          Text(label, style: TextStyle(color: colorScheme.onSurfaceVariant, fontSize: 12)),
+          const SizedBox(height: 5),
+          Text(value, style: TextStyle(color: colorScheme.onSurface, fontWeight: FontWeight.bold, fontSize: 16)),
+        ],
       ),
     );
   }

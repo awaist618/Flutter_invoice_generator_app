@@ -68,6 +68,38 @@ class Invoice {
   double get taxAmount => subtotal * (taxRate / 100);
   double get total => subtotal + taxAmount;
 
+  Invoice copyWith({
+    String? id,
+    String? invoiceNumber,
+    String? customerName,
+    String? customerEmail,
+    String? customerAddress,
+    String? customerPhone,
+    DateTime? date,
+    DateTime? dueDate,
+    List<InvoiceItem>? items,
+    double? taxRate,
+    InvoiceStatus? status,
+    String? notes,
+    String? paymentInstructions,
+  }) {
+    return Invoice(
+      id: id ?? this.id,
+      invoiceNumber: invoiceNumber ?? this.invoiceNumber,
+      customerName: customerName ?? this.customerName,
+      customerEmail: customerEmail ?? this.customerEmail,
+      customerAddress: customerAddress ?? this.customerAddress,
+      customerPhone: customerPhone ?? this.customerPhone,
+      date: date ?? this.date,
+      dueDate: dueDate ?? this.dueDate,
+      items: items ?? this.items,
+      taxRate: taxRate ?? this.taxRate,
+      status: status ?? this.status,
+      notes: notes ?? this.notes,
+      paymentInstructions: paymentInstructions ?? this.paymentInstructions,
+    );
+  }
+
   Map<String, dynamic> toJson() => {
     'id': id,
     'invoiceNumber': invoiceNumber,

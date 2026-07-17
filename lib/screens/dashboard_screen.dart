@@ -8,6 +8,9 @@ import 'create_invoice_screen.dart';
 import 'settings_screen.dart';
 import 'reports_screen.dart';
 import 'invoice_detail_screen.dart';
+import 'customer_list_screen.dart';
+import 'product_list_screen.dart';
+import 'notifications_screen.dart';
 
 class DashboardScreen extends StatefulWidget {
   const DashboardScreen({super.key});
@@ -27,6 +30,14 @@ class _DashboardScreenState extends State<DashboardScreen> {
     final colorScheme = theme.colorScheme;
     final isDark = theme.brightness == Brightness.dark;
 
+    // Calculate urgent notification count
+    final now = DateTime.now();
+    final urgentCount = provider.invoices.where((inv) {
+      if (inv.status == InvoiceStatus.paid) return false;
+      if (inv.status == InvoiceStatus.overdue) return true;
+      return inv.dueDate.difference(now).inDays <= 3;
+    }).length;
+
     return Scaffold(
       backgroundColor: theme.scaffoldBackgroundColor,
       extendBody: true,
@@ -38,27 +49,65 @@ class _DashboardScreenState extends State<DashboardScreen> {
               Positioned(
                 top: -60,
                 right: -60,
-                child: Container(
-                  width: 250,
-                  height: 250,
-                  decoration: BoxDecoration(
-                    color: const Color(0xFFB4B0FF).withOpacity(isDark ? 0.3 : 1.0),
-                    shape: BoxShape.circle,
-                  ),
-                  child: Center(
-                    child: Container(
-                      width: 100,
-                      height: 100,
-                      decoration: BoxDecoration(
-                        color: colorScheme.primary,
-                        shape: BoxShape.circle,
-                      ),
-                      child: const Center(
-                        child: Icon(
-                          Icons.notifications_outlined,
-                          color: Colors.white,
-                          size: 30,
-                        ),
+                child: GestureDetector(
+                  onTap: () {
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(builder: (context) => const NotificationsScreen()),
+                    );
+                  },
+                  child: Container(
+                    width: 250,
+                    height: 250,
+                    decoration: BoxDecoration(
+                      color: const Color(0xFFB4B0FF).withOpacity(isDark ? 0.3 : 1.0),
+                      shape: BoxShape.circle,
+                    ),
+                    child: Center(
+                      child: Stack(
+                        alignment: Alignment.center,
+                        children: [
+                          Container(
+                            width: 100,
+                            height: 100,
+                            decoration: BoxDecoration(
+                              color: colorScheme.primary,
+                              shape: BoxShape.circle,
+                            ),
+                            child: const Center(
+                              child: Icon(
+                                Icons.notifications_outlined,
+                                color: Colors.white,
+                                size: 30,
+                              ),
+                            ),
+                          ),
+                          if (urgentCount > 0)
+                            Positioned(
+                              top: 25,
+                              right: 25,
+                              child: Container(
+                                padding: const EdgeInsets.all(6),
+                                decoration: const BoxDecoration(
+                                  color: Color(0xFFE25E31),
+                                  shape: BoxShape.circle,
+                                ),
+                                constraints: const BoxConstraints(
+                                  minWidth: 24,
+                                  minHeight: 24,
+                                ),
+                                child: Text(
+                                  '$urgentCount',
+                                  style: const TextStyle(
+                                    color: Colors.white,
+                                    fontSize: 12,
+                                    fontWeight: FontWeight.bold,
+                                  ),
+                                  textAlign: TextAlign.center,
+                                ),
+                              ),
+                            ),
+                        ],
                       ),
                     ),
                   ),
@@ -91,33 +140,62 @@ class _DashboardScreenState extends State<DashboardScreen> {
                     const SizedBox(height: 30),
 
                     // Summary Cards Grid
-                    GridView.count(
-                      shrinkWrap: true,
-                      physics: const NeverScrollableScrollPhysics(),
-                      crossAxisCount: 2,
-                      mainAxisSpacing: 15,
-                      crossAxisSpacing: 15,
-                      childAspectRatio: 3.2,
+                    LayoutBuilder(
+                      builder: (context, constraints) {
+                        return GridView.count(
+                          shrinkWrap: true,
+                          physics: const NeverScrollableScrollPhysics(),
+                          crossAxisCount: constraints.maxWidth > 400 ? 2 : 1,
+                          mainAxisSpacing: 15,
+                          crossAxisSpacing: 15,
+                          childAspectRatio: constraints.maxWidth > 400 ? 3.2 : 4.5,
+                          children: [
+                            _buildSummaryCard(
+                              'Total invoices',
+                              '${provider.totalInvoicesCount}',
+                              colorScheme.primary,
+                            ),
+                            _buildSummaryCard(
+                              'Total revenue',
+                              settings.currencySymbol + provider.totalRevenue.toStringAsFixed(0),
+                              colorScheme.secondary,
+                            ),
+                            _buildSummaryCard(
+                              'Paid',
+                              '${provider.paidCount}',
+                              const Color(0xFF126E51),
+                            ),
+                            _buildSummaryCard(
+                              'Unpaid',
+                              '${provider.unpaidCount}',
+                              const Color(0xFF962D4D),
+                            ),
+                          ],
+                        );
+                      }
+                    ),
+
+                    const SizedBox(height: 30),
+
+                    // Quick Actions
+                    Row(
                       children: [
-                        _buildSummaryCard(
-                          'Total invoices',
-                          '${provider.totalInvoicesCount}',
-                          colorScheme.primary,
+                        Expanded(
+                          child: _buildQuickActionCard(
+                            'Customers',
+                            Icons.people_outline,
+                            const Color(0xFF66D1A4),
+                            () => Navigator.push(context, MaterialPageRoute(builder: (context) => const CustomerListScreen())),
+                          ),
                         ),
-                        _buildSummaryCard(
-                          'Total revenue',
-                          settings.currencySymbol + provider.totalRevenue.toStringAsFixed(0),
-                          colorScheme.secondary,
-                        ),
-                        _buildSummaryCard(
-                          'Paid',
-                          '${provider.paidCount}',
-                          const Color(0xFF126E51),
-                        ),
-                        _buildSummaryCard(
-                          'Unpaid',
-                          '${provider.unpaidCount}',
-                          const Color(0xFF962D4D),
+                        const SizedBox(width: 15),
+                        Expanded(
+                          child: _buildQuickActionCard(
+                            'Products',
+                            Icons.inventory_2_outlined,
+                            const Color(0xFFB4B0FF),
+                            () => Navigator.push(context, MaterialPageRoute(builder: (context) => const ProductListScreen())),
+                          ),
                         ),
                       ],
                     ),
@@ -370,6 +448,33 @@ class _DashboardScreenState extends State<DashboardScreen> {
     );
   }
 
+  Widget _buildQuickActionCard(String title, IconData icon, Color color, VoidCallback onTap) {
+    return GestureDetector(
+      onTap: onTap,
+      child: Container(
+        padding: const EdgeInsets.all(15),
+        decoration: BoxDecoration(
+          color: color.withOpacity(0.1),
+          borderRadius: BorderRadius.circular(20),
+          border: Border.all(color: color.withOpacity(0.2)),
+        ),
+        child: Row(
+          children: [
+            Icon(icon, color: color),
+            const SizedBox(width: 10),
+            Text(
+              title,
+              style: TextStyle(
+                fontWeight: FontWeight.bold,
+                color: color.withOpacity(0.8),
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
   Widget _buildInvoiceTile(Invoice inv, ColorScheme colorScheme, bool isDark) {
     Color statusColor;
     String statusLabel;
@@ -398,6 +503,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
           ),
         );
       },
+      onLongPress: () => _showDeleteDialog(context, inv),
       child: Container(
         margin: const EdgeInsets.only(bottom: 15),
         padding: const EdgeInsets.all(15),
@@ -478,6 +584,32 @@ class _DashboardScreenState extends State<DashboardScreen> {
             ),
           ],
         ),
+      ),
+    );
+  }
+
+  void _showDeleteDialog(BuildContext context, Invoice invoice) {
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('Delete Invoice'),
+        content: Text('Are you sure you want to delete invoice ${invoice.invoiceNumber}?'),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: const Text('Cancel'),
+          ),
+          TextButton(
+            onPressed: () {
+              Provider.of<InvoiceProvider>(context, listen: false).deleteInvoice(invoice.id);
+              Navigator.pop(context);
+              ScaffoldMessenger.of(context).showSnackBar(
+                SnackBar(content: Text('Invoice ${invoice.invoiceNumber} deleted')),
+              );
+            },
+            child: const Text('Delete', style: TextStyle(color: Colors.red)),
+          ),
+        ],
       ),
     );
   }

@@ -10,6 +10,8 @@ class SettingsProvider with ChangeNotifier {
   String _invoicePrefix = 'INV-';
   bool _isDarkMode = false;
   String? _logoPath;
+  String _selectedTemplate = 'Modern';
+  String _paymentDetails = 'hello@acmestudio.com'; // Default to email or UPI ID
 
   // Getters
   String get companyName => _companyName;
@@ -17,6 +19,8 @@ class SettingsProvider with ChangeNotifier {
   String get companyAddress => _companyAddress;
   String get companyPhone => _companyPhone;
   String get currency => _currency;
+  String get selectedTemplate => _selectedTemplate;
+  String get paymentDetails => _paymentDetails;
   
   String get currencySymbol {
     if (_currency.contains('(')) {
@@ -28,6 +32,17 @@ class SettingsProvider with ChangeNotifier {
   String get invoicePrefix => _invoicePrefix;
   bool get isDarkMode => _isDarkMode;
   String? get logoPath => _logoPath;
+
+  // Setters
+  void updateTemplate(String template) {
+    _selectedTemplate = template;
+    notifyListeners();
+  }
+
+  void updatePaymentDetails(String details) {
+    _paymentDetails = details;
+    notifyListeners();
+  }
 
   // Setters
   void updateCompanyName(String name) {

@@ -4,24 +4,19 @@ import 'package:shared_preferences/shared_preferences.dart';
 import '../models/invoice_model.dart';
 import 'package:intl/intl.dart';
 import 'notification_service.dart';
-
 import 'dart:io';
 import 'package:path_provider/path_provider.dart';
 import 'package:csv/csv.dart';
 import 'package:share_plus/share_plus.dart';
-// import 'package:file_picker/file_picker.dart';
 
 class InvoiceProvider with ChangeNotifier {
   final List<Invoice> _invoices = [];
 
   List<Invoice> get invoices => [..._invoices];
 
-  // ... (rest of the getters)
-
   Future<void> exportToCsv() async {
     List<List<dynamic>> rows = [];
     
-    // Add header
     rows.add([
       "Invoice Number",
       "Customer Name",
@@ -65,37 +60,6 @@ class InvoiceProvider with ChangeNotifier {
     await Share.shareXFiles([XFile(file.path)], text: 'Invoicely Data Backup');
   }
 
-  Future<bool> restoreData() async {
-    // Feature removed due to build issues with file_picker
-    debugPrint('Restore feature is currently disabled');
-    return false;
-    /*
-    FilePickerResult? result = await FilePicker.pickFiles(
-      type: FileType.custom,
-      allowedExtensions: ['json'],
-    );
-
-    if (result != null) {
-      File file = File(result.files.single.path!);
-      String content = await file.readAsString();
-      try {
-        final List decoded = jsonDecode(content);
-        _invoices.clear();
-        _invoices.addAll(decoded.map((e) => Invoice.fromJson(e)).toList());
-        await _saveToLocal();
-        notifyListeners();
-        return true;
-      } catch (e) {
-        debugPrint('Restore failed: $e');
-        return false;
-      }
-    }
-    return false;
-    */
-  }
-
-  // ... (rest of the methods)
-
   List<Invoice> get recentInvoices => _invoices.reversed.take(5).toList();
 
   double get totalRevenue => _invoices
@@ -125,14 +89,13 @@ class InvoiceProvider with ChangeNotifier {
     return data;
   }
 
-  double get revenueGrowth => 12.4; // Demo value
+  double get revenueGrowth => 12.4; 
 
   Future<void> addInvoice(Invoice invoice) async {
     _invoices.add(invoice);
     _checkOverdueStatus();
     await _saveToLocal();
     
-    // Schedule notification for due date
     try {
       await NotificationService().scheduleInvoiceReminders(
         invoice.id.hashCode,
@@ -150,7 +113,6 @@ class InvoiceProvider with ChangeNotifier {
     final index = _invoices.indexWhere((inv) => inv.id == id);
     if (index != -1) {
       final invoice = _invoices[index];
-      // Cancel notifications
       try {
         await NotificationService().cancelAllReminders(invoice.id.hashCode);
       } catch (e) {
@@ -168,7 +130,6 @@ class InvoiceProvider with ChangeNotifier {
       final invoice = _invoices[index];
       _invoices[index] = invoice.copyWith(status: newStatus);
       
-      // Cancel notifications if paid
       if (newStatus == InvoiceStatus.paid) {
         try {
           await NotificationService().cancelAllReminders(invoice.id.hashCode);
@@ -213,7 +174,6 @@ class InvoiceProvider with ChangeNotifier {
       _invoices.addAll(decoded.map((e) => Invoice.fromJson(e)).toList());
       _checkOverdueStatus();
     } else {
-      // Initializing with some dummy data if nothing is saved
       _invoices.clear();
       _invoices.add(Invoice(
         invoiceNumber: 'INV-108',
@@ -244,7 +204,7 @@ class InvoiceProvider with ChangeNotifier {
         customerAddress: '99 North Rd, Seattle, WA 98101',
         customerPhone: '+1 (206) 555-0122',
         date: DateTime.now().subtract(const Duration(days: 1)),
-        dueDate: DateTime.now().add(const Duration(days: 1)), // Due tomorrow!
+        dueDate: DateTime.now().add(const Duration(days: 1)),
         status: InvoiceStatus.unpaid,
         items: [InvoiceItem(name: 'Social Media Management', quantity: 1, unitPrice: 2015)],
       ));

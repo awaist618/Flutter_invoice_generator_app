@@ -245,25 +245,6 @@ class SettingsScreen extends StatelessWidget {
                           onTap: () => invoiceProvider.backupData(),
                           colorScheme: colorScheme,
                         ),
-                        /*
-                        Divider(height: 1, indent: 20, endIndent: 20, color: isDark ? Colors.white12 : Colors.grey.shade200),
-                        _buildPreferenceItem(
-                          'Restore Data',
-                          'Import JSON',
-                          onTap: () async {
-                            final success = await invoiceProvider.restoreData();
-                            if (context.mounted) {
-                              ScaffoldMessenger.of(context).showSnackBar(
-                                SnackBar(
-                                  content: Text(success ? 'Data restored successfully' : 'Restore failed'),
-                                  backgroundColor: success ? Colors.green : Colors.red,
-                                ),
-                              );
-                            }
-                          },
-                          colorScheme: colorScheme,
-                        ),
-                        */
                         Divider(height: 1, indent: 20, endIndent: 20, color: isDark ? Colors.white12 : Colors.grey.shade200),
                         _buildPreferenceItem(
                           'About Developer',

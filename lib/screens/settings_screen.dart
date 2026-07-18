@@ -165,7 +165,7 @@ class SettingsScreen extends StatelessWidget {
                     onChanged: (val) => settings.updatePaymentDetails(val),
                     colorScheme: colorScheme,
                     isDark: isDark,
-                    hint: 'UPI ID / Bank Details / PayPal',
+                    hint: 'JazzCash / Bank Details',
                   ),
                   const SizedBox(height: 30),
 

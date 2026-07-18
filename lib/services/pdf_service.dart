@@ -174,7 +174,7 @@ class PdfService {
                         ),
                       ),
                       pw.SizedBox(height: 5),
-                      pw.Text('Scan to pay via UPI/Bank', style: pw.TextStyle(font: font, fontSize: 8, color: PdfColors.grey600)),
+                      pw.Text('Scan to pay via Jazz/Bank', style: pw.TextStyle(font: font, fontSize: 8, color: PdfColors.grey600)),
                     ],
                   ),
                   pw.Column(

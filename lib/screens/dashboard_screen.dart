@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import 'package:intl/intl.dart';
 import '../services/invoice_provider.dart';
 import '../services/settings_provider.dart';
 import '../models/invoice_model.dart';
@@ -157,7 +158,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
                             ),
                             _buildSummaryCard(
                               'Total revenue',
-                              settings.currencySymbol + provider.totalRevenue.toStringAsFixed(0),
+                              settings.currencySymbol + NumberFormat("#,##0", "en_US").format(provider.totalRevenue),
                               colorScheme.secondary,
                             ),
                             _buildSummaryCard(
@@ -557,7 +558,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
               crossAxisAlignment: CrossAxisAlignment.end,
               children: [
                 Text(
-                  Provider.of<SettingsProvider>(context, listen: false).currencySymbol + inv.total.toStringAsFixed(0),
+                  Provider.of<SettingsProvider>(context, listen: false).currencySymbol + NumberFormat("#,##0", "en_US").format(inv.total),
                   style: TextStyle(
                     fontWeight: FontWeight.bold,
                     fontSize: 16,

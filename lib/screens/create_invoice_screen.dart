@@ -138,7 +138,7 @@ class _CreateInvoiceScreenState extends State<CreateInvoiceScreen> {
                   final product = productProvider.products[index];
                   return ListTile(
                     title: Text(product.name, style: const TextStyle(fontWeight: FontWeight.bold)),
-                    subtitle: Text('Price: ${Provider.of<SettingsProvider>(context, listen: false).currencySymbol}${product.unitPrice}'),
+                    subtitle: Text('Price: ${Provider.of<SettingsProvider>(context, listen: false).currencySymbol}${NumberFormat("#,##0.00").format(product.unitPrice)}'),
                     onTap: () {
                       Navigator.pop(context);
                       _showAddItemWithProduct(product);
@@ -495,7 +495,7 @@ class _CreateInvoiceScreenState extends State<CreateInvoiceScreen> {
                         ),
                       )
                     else
-                      ..._items.map((item) => _buildItemTile(item, colorScheme, isDark)),
+                      ..._items.map((item) => _buildItemTile(item, colorScheme, isDark, settings)),
 
                     const SizedBox(height: 30),
 
@@ -536,9 +536,9 @@ class _CreateInvoiceScreenState extends State<CreateInvoiceScreen> {
                       ),
                       child: Column(
                         children: [
-                          _buildSummaryRow('Subtotal', settings.currencySymbol + subtotal.toStringAsFixed(2)),
+                          _buildSummaryRow('Subtotal', settings.currencySymbol + NumberFormat("#,##0.00").format(subtotal)),
                           const SizedBox(height: 12),
-                          _buildSummaryRow('Tax (${settings.defaultTaxRate.toStringAsFixed(0)}%)', settings.currencySymbol + taxAmount.toStringAsFixed(2)),
+                          _buildSummaryRow('Tax (${settings.defaultTaxRate.toStringAsFixed(0)}%)', settings.currencySymbol + NumberFormat("#,##0.00").format(taxAmount)),
                           const SizedBox(height: 20),
                           Divider(color: Colors.white.withOpacity(0.2)),
                           const SizedBox(height: 20),
@@ -550,7 +550,7 @@ class _CreateInvoiceScreenState extends State<CreateInvoiceScreen> {
                                 style: TextStyle(color: Colors.white, fontSize: 22, fontWeight: FontWeight.bold),
                               ),
                               Text(
-                                settings.currencySymbol + total.toStringAsFixed(2),
+                                settings.currencySymbol + NumberFormat("#,##0.00").format(total),
                                 style: const TextStyle(color: Colors.white, fontSize: 22, fontWeight: FontWeight.bold),
                               ),
                             ],
@@ -665,7 +665,7 @@ class _CreateInvoiceScreenState extends State<CreateInvoiceScreen> {
     );
   }
 
-  Widget _buildItemTile(InvoiceItem item, ColorScheme colorScheme, bool isDark) {
+  Widget _buildItemTile(InvoiceItem item, ColorScheme colorScheme, bool isDark, SettingsProvider settings) {
     return Container(
       margin: const EdgeInsets.only(bottom: 15),
       decoration: BoxDecoration(
@@ -708,7 +708,7 @@ class _CreateInvoiceScreenState extends State<CreateInvoiceScreen> {
                   ),
                   const SizedBox(height: 4),
                   Text(
-                    '${item.quantity} x \$${item.unitPrice.toStringAsFixed(2)}',
+                    '${item.quantity} x ${settings.currencySymbol}${NumberFormat("#,##0.00").format(item.unitPrice)}',
                     style: TextStyle(
                       color: colorScheme.onSurfaceVariant,
                       fontSize: 14,
@@ -718,7 +718,7 @@ class _CreateInvoiceScreenState extends State<CreateInvoiceScreen> {
               ),
             ),
             Text(
-              '\$${item.total.toStringAsFixed(2)}',
+              '${settings.currencySymbol}${NumberFormat("#,##0.00").format(item.total)}',
               style: TextStyle(
                 fontSize: 16,
                 fontWeight: FontWeight.bold,

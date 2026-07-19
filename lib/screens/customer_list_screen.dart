@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:provider/provider.dart';
 import '../services/customer_provider.dart';
 import '../models/customer_model.dart';
@@ -173,8 +174,10 @@ class CustomerListScreen extends StatelessWidget {
               final provider = Provider.of<CustomerProvider>(context, listen: false);
               if (customer == null) {
                 provider.addCustomer(newCustomer);
+                HapticFeedback.lightImpact();
               } else {
                 provider.updateCustomer(newCustomer);
+                HapticFeedback.lightImpact();
               }
               Navigator.pop(context);
             },

@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:provider/provider.dart';
 import 'package:intl/intl.dart';
 import '../models/invoice_model.dart';
@@ -589,6 +590,7 @@ class _CreateInvoiceScreenState extends State<CreateInvoiceScreen> {
                               paymentInstructions: _paymentInstructionsController.text,
                             );
                             Provider.of<InvoiceProvider>(context, listen: false).addInvoice(newInvoice);
+                            HapticFeedback.lightImpact();
                             
                             // Schedule notification
                             NotificationService().scheduleInvoiceReminders(

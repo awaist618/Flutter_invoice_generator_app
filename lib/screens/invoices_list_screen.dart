@@ -17,6 +17,13 @@ class InvoicesListScreen extends StatefulWidget {
 class _InvoicesListScreenState extends State<InvoicesListScreen> {
   String _selectedFilter = 'All';
   String _searchQuery = '';
+  final TextEditingController _searchController = TextEditingController();
+
+  @override
+  void dispose() {
+    _searchController.dispose();
+    super.dispose();
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -97,12 +104,22 @@ class _InvoicesListScreenState extends State<InvoicesListScreen> {
                       border: isDark ? Border.all(color: Colors.white12) : null,
                     ),
                     child: TextField(
+                      controller: _searchController,
                       onChanged: (value) => setState(() => _searchQuery = value),
                       style: TextStyle(color: colorScheme.onSurface),
                       decoration: InputDecoration(
                         border: InputBorder.none,
                         hintText: 'Search by number or customer',
                         hintStyle: TextStyle(color: colorScheme.onSurfaceVariant),
+                        suffixIcon: _searchQuery.isNotEmpty
+                            ? IconButton(
+                                icon: Icon(Icons.clear, color: colorScheme.onSurfaceVariant),
+                                onPressed: () {
+                                  _searchController.clear();
+                                  setState(() => _searchQuery = '');
+                                },
+                              )
+                            : null,
                       ),
                     ),
                   ),
